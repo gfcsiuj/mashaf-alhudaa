@@ -7,7 +7,7 @@ import { QuranHeader } from "./QuranHeader";
 import { QuranControls } from "./QuranControls";
 import { SearchPanel } from "./SearchPanel";
 import { IndexPanel } from "./IndexPanel";
-import { SettingsPanel } from "./SettingsPanel";
+import { SettingsPage } from "../pages/SettingsPage";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { RemindersPanel } from "./RemindersPanel";
 import { AudioPlayer } from "./AudioPlayer";
@@ -42,9 +42,10 @@ export function QuranReader() {
   const [audioPlaylist, setAudioPlaylist] = useState<any[]>([]);
   const [showControls, setShowControls] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [showSettingsPage, setShowSettingsPage] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [currentVerseAudio, setCurrentVerseAudio] = useState<string | null>(null);
+  const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   
   // Global State Variables - مصدر الحقيقة الوحيد في التطبيق
   // تحميل الإعدادات من localStorage إذا كانت موجودة
@@ -52,6 +53,8 @@ export function QuranReader() {
   const [selectedReciter, setSelectedReciter] = useState(localSettings.selectedReciter || 7); // Default to Al-Afasy
   const [selectedTafsir, setSelectedTafsir] = useState(localSettings.selectedTafsir || 167); // Default to Jalalayn
   const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131); // Default translation
+  const [showTranslation, setShowTranslation] = useState(localSettings.showTranslation || false);
+  const [showTafsir, setShowTafsir] = useState(localSettings.showTafsir || false);
   const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'light'); // إضافة حالة للثيم الحالي
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -96,28 +99,13 @@ export function QuranReader() {
       
       setPageData(data);
       
-      // إضافة الرابط الأساسي لكل ملف صوتي في قائمة التشغيل
-      const completeAudioPlaylist = (audio || []).map(item => {
-        // التأكد من أن الرابط صالح وكامل
-        let fullUrl = null;
-        if (item.audioUrl) {
-          // إذا كان الرابط يبدأ بـ http فهو كامل بالفعل
-          if (item.audioUrl.startsWith('http')) {
-            fullUrl = item.audioUrl;
-          } else {
-            // وإلا نضيف الرابط الأساسي
-            fullUrl = AUDIO_BASE_URL + item.audioUrl;
-          }
-          console.log(`Original URL: ${item.audioUrl}, Full URL: ${fullUrl}`);
-        }
-        
-        return {
-          ...item,
-          url: fullUrl
-        };
-      }).filter(item => item.url !== null); // استبعاد العناصر التي ليس لها رابط صالح
-      
-      setAudioPlaylist(completeAudioPlaylist);
+      // The backend now provides the full URL, so no need to construct it here.
+      const audioPlaylist = (audio || []).map(item => ({
+        ...item,
+        url: item.audioUrl,
+      })).filter(item => item.url !== null);
+
+      setAudioPlaylist(audioPlaylist);
       setCurrentPage(pageNumber);
       
       // Update reading progress
@@ -277,8 +265,15 @@ export function QuranReader() {
         currentPage={currentPage}
         verses={pageData?.verses || []}
         showControls={showControls}
-        onOpenPanel={setActivePanel}
+        onOpenPanel={(panel) => {
+          if (panel === 'settings') {
+            setShowSettingsPage(true);
+          } else {
+            setActivePanel(panel);
+          }
+        }}
         audioPlaylist={audioPlaylist}
+        onTrackChange={setHighlightedVerse}
       />
 
       {/* Audio Player - لا نعرضه هنا بعد الآن لأننا سننقله إلى القائمة العلوية */}
@@ -299,6 +294,9 @@ export function QuranReader() {
         currentPage={currentPage}
         userPreferences={userPreferences}
         playVerseInMainPlayer={playVerseInMainPlayer}
+        showTranslation={showTranslation}
+        showTafsir={showTafsir}
+        highlightedVerse={highlightedVerse}
       />
         </div>
       </main>
@@ -327,14 +325,16 @@ export function QuranReader() {
         />
       )}
       
-      {activePanel === 'settings' && (
-        <SettingsPanel 
-          onClose={() => setActivePanel(null)} 
+      {showSettingsPage && (
+        <SettingsPage
+          onClose={() => setShowSettingsPage(false)}
           currentPage={currentPage}
           loadPage={loadPage}
           setSelectedReciter={setSelectedReciter}
           setSelectedTafsir={setSelectedTafsir}
           setSelectedTranslation={setSelectedTranslation}
+          setShowTranslation={setShowTranslation}
+          setShowTafsir={setShowTafsir}
         />
       )}
       

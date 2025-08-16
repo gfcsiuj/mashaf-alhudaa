@@ -23,9 +23,12 @@ interface QuranPageProps {
   currentPage: number;
   userPreferences: any;
   playVerseInMainPlayer: (verseKey: string, audioUrl: string) => void;
+  showTranslation: boolean;
+  showTafsir: boolean;
+  highlightedVerse: string | null;
 }
 
-export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer }: QuranPageProps) {
+export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer, showTranslation, showTafsir, highlightedVerse }: QuranPageProps) {
   const [selectedVerse, setSelectedVerse] = useState<string | null>(null);
   const [showVerseMenu, setShowVerseMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -226,8 +229,6 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
 
   const fontSize = userPreferences?.fontSize || 'medium';
   const arabicFont = userPreferences?.arabicFont || 'uthmani';
-  const showTranslation = userPreferences?.showTranslation || false;
-  const showTafsir = userPreferences?.showTafsir || false;
 
   const fontSizeClasses: Record<string, string> = {
     small: 'text-lg',
@@ -277,7 +278,7 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
           {verses.map((verse, index) => (
             <span key={verse.id || index}>
               <span
-                className="cursor-pointer hover:bg-gray-50 rounded px-1 transition-colors duration-200"
+                className={`cursor-pointer hover:bg-gray-50 rounded px-1 transition-colors duration-200 ${highlightedVerse === verse.verse_key ? 'active-verse' : ''}`}
                 onClick={() => handleVerseClick(verse)}
                 onContextMenu={(e) => handleVerseLongPress(verse, e)}
                 onTouchStart={(e) => {

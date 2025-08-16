@@ -14,9 +14,10 @@ interface QuranHeaderProps {
   showControls: boolean;
   onOpenPanel: (panel: string) => void;
   audioPlaylist?: any[];
+  onTrackChange?: (verseKey: string) => void;
 }
 
-export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, audioPlaylist }: QuranHeaderProps) {
+export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, audioPlaylist, onTrackChange }: QuranHeaderProps) {
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const firstVerse = verses[0];
   const chapterName = getChapterName(firstVerse?.chapter_id);
@@ -132,6 +133,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
                 playlist={audioPlaylist} 
                 showControls={true} 
                 isInHeader={true}
+                onTrackChange={onTrackChange}
               />
             </div>
           )}

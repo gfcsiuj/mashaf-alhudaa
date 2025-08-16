@@ -414,3 +414,51 @@ body {
 .tooltip:hover::after {
   opacity: 1;
 }
+
+/* New Audio Player UI Styles */
+.audio-player-ui {
+  @apply bg-[#8b7355] p-3 rounded-lg shadow-lg flex items-center gap-4;
+}
+
+.audio-progress::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.audio-progress::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Active Verse Highlighting */
+.active-verse {
+  background-color: rgba(239, 213, 179, 0.5) !important; /* A light, warm highlight */
+  color: #8b7355 !important;
+  border-radius: 4px;
+}
