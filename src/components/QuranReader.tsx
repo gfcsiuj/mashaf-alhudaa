@@ -65,7 +65,7 @@ export function QuranReader() {
         pageNumber,
         reciterId: userPreferences?.selectedReciter || 7,
         tafsirId: userPreferences?.selectedTafsir || 167,
-        translationId: userPreferences?.selectedTranslation || 131,
+        translationId: userPreferences?.selectedTranslation || 20,
       });
       
       console.log("Page data loaded:", data);

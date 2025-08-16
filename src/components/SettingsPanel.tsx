@@ -14,7 +14,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [settings, setSettings] = useState({
     selectedReciter: 7,
     selectedTafsir: 167,
-    selectedTranslation: 131,
+    selectedTranslation: 20,
     theme: "light",
     fontSize: "medium",
     arabicFont: "uthmani",
@@ -29,7 +29,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       setSettings({
         selectedReciter: userPreferences.selectedReciter || 7,
         selectedTafsir: userPreferences.selectedTafsir || 167,
-        selectedTranslation: userPreferences.selectedTranslation || 131,
+        selectedTranslation: userPreferences.selectedTranslation || 20,
         theme: userPreferences.theme || "light",
         fontSize: userPreferences.fontSize || "medium",
         arabicFont: userPreferences.arabicFont || "uthmani",
@@ -71,13 +71,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   ];
 
   const translations = [
-    { id: 131, name: "مجمع الملك فهد (إنجليزية)" },
-    { id: 20, name: "صحيح الدولية" },
+    { id: 20, name: "صحيح الدولية (إنجليزية)" },
     { id: 84, name: "تقي عثماني (إنجليزية)" },
     { id: 31, name: "محمد حميد الله (فرنسية)" },
     { id: 83, name: "الشيخ عيسى غارسيا (إسبانية)" },
     { id: 77, name: "ترجمة ديانت (تركية)" },
-    { id: 33, name: "وزارة الشؤون الإسلامية الإندونيسية" },
+    { id: 33, name: "وزارة الشؤون الإسلامية (إندونيسية)" },
+    { id: 131, name: "عبدالله أبوبكر (سواحيلية)" },
   ];
 
   return (
