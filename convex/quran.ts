@@ -14,10 +14,10 @@ export const getPageData = action({
     const { pageNumber, reciterId = 7, tafsirId = 167, translationId = 20 } = args;
     
     try {
-      // Build the API URL with proper parameters
-      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?language=ar&words=false&translations=${translationId}&tafsirs=${tafsirId}&audio=${reciterId}&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
+      // Build the API URL with only the essential parameters for debugging
+      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?language=ar&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
       
-      console.log("Fetching from URL:", url);
+      console.log("Fetching from URL (minimal for debugging):", url);
       
       const response = await fetch(url, {
         headers: {
