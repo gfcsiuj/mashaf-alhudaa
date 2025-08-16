@@ -1,0 +1,386 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Arabic fonts */
+@import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-paper: #fefefe;
+  --color-text: #2c2c2c;
+  --color-accent: #8b7355;
+  --color-border: #e5e5e5;
+  --color-muted: #6b7280;
+  --color-hover: #f8f9fa;
+}
+
+body {
+  font-family: "Noto Sans Arabic", "Cairo", ui-sans-serif, system-ui, sans-serif;
+  color: var(--color-text);
+  background: var(--color-paper);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* Arabic Quran fonts */
+.font-quran {
+  font-family: 'Amiri Quran', serif;
+  font-weight: 400;
+  line-height: 2.2;
+  letter-spacing: 0.02em;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.font-indopak {
+  font-family: 'Scheherazade New', serif;
+  font-weight: 400;
+  line-height: 2.4;
+  letter-spacing: 0.01em;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.font-qpc {
+  font-family: 'Noto Sans Arabic', serif;
+  font-weight: 500;
+  line-height: 2.3;
+  letter-spacing: 0.015em;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* UI fonts */
+.font-ui {
+  font-family: "Noto Sans Arabic", "Cairo", sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b5b47;
+}
+
+/* Auth styles */
+.auth-input-field {
+  @apply w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#8b7355] focus:ring-2 focus:ring-[#8b7355]/20 outline-none transition-all;
+}
+
+.auth-button {
+  @apply w-full px-4 py-3 rounded-lg bg-[#8b7355] text-white font-medium hover:bg-[#6b5b47] transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Verse number styling */
+.verse-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--color-accent);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 8px;
+  flex-shrink: 0;
+  font-family: "Noto Sans Arabic", sans-serif;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Button hover effects */
+.btn-hover {
+  transition: all 0.2s ease;
+}
+
+.btn-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-hover:active {
+  transform: translateY(0);
+}
+
+/* Icon styles */
+.icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* RTL support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-[#8b7355]/50 focus:ring-offset-2;
+}
+
+/* Loading spinner */
+.spinner {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Audio player progress bar */
+.progress-bar {
+  position: relative;
+  height: 4px;
+  background: #e5e5e5;
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: height 0.2s ease;
+}
+
+.progress-bar:hover {
+  height: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 2px;
+  transition: width 0.1s ease;
+  position: relative;
+}
+
+.progress-handle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar:hover .progress-handle {
+  opacity: 1;
+}
+
+/* Panel animations */
+.panel-enter {
+  animation: panelSlideUp 0.3s ease-out;
+}
+
+@keyframes panelSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Theme variations */
+.theme-dark {
+  --color-paper: #1a1a1a;
+  --color-text: #e5e5e5;
+  --color-border: #333;
+  --color-hover: #2a2a2a;
+}
+
+.theme-sepia {
+  --color-paper: #f4f1e8;
+  --color-text: #5c4b37;
+  --color-border: #d4c4a8;
+  --color-hover: #ede8dc;
+}
+
+.theme-green {
+  --color-paper: #f0f9f0;
+  --color-text: #1a4d1a;
+  --color-accent: #2d7d2d;
+  --color-border: #c8e6c8;
+  --color-hover: #e8f5e8;
+}
+
+/* Error states */
+.error-state {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.error-button {
+  background-color: #dc2626;
+  color: white;
+}
+
+.error-button:hover {
+  background-color: #b91c1c;
+}
+
+/* Success states */
+.success-state {
+  color: #059669;
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .font-quran, .font-indopak, .font-qpc {
+    font-size: 18px;
+    line-height: 2;
+  }
+  
+  .verse-number {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    margin: 0 6px;
+  }
+}
+
+@media (max-width: 640px) {
+  .progress-bar {
+    height: 6px;
+  }
+  
+  .progress-handle {
+    width: 16px;
+    height: 16px;
+    opacity: 1;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .font-quran, .font-indopak, .font-qpc {
+    color: black !important;
+    background: white !important;
+  }
+  
+  .verse-number {
+    background: black !important;
+    color: white !important;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --color-accent: #000000;
+    --color-text: #000000;
+    --color-border: #000000;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Tooltip styles */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 1000;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+}

@@ -1,0 +1,75 @@
+{
+  "name": "القرآن الكريم - Quran PWA",
+  "short_name": "القرآن الكريم",
+  "description": "تطبيق ويب تقدمي للقرآن الكريم مع ميزات متقدمة للقراءة والاستماع والبحث",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+
+  ],
+  "categories": ["education", "books", "lifestyle"],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/mobile-1.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "البحث في القرآن",
+      "short_name": "بحث",
+      "description": "البحث في آيات القرآن الكريم",
+      "url": "/?action=search",
+      "icons": [
+        {
+          "src": "/icons/search-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "فهرس السور",
+      "short_name": "فهرس",
+      "description": "تصفح فهرس سور القرآن الكريم",
+      "url": "/?action=index",
+      "icons": [
+        {
+          "src": "/icons/index-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "المفضلة",
+      "short_name": "مفضلة",
+      "description": "الآيات المحفوظة في المفضلة",
+      "url": "/?action=bookmarks",
+      "icons": [
+        {
+          "src": "/icons/bookmark-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
