@@ -11,7 +11,7 @@ export const getPageData = action({
     translationId: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { pageNumber, reciterId = 7, tafsirId = 167, translationId = 131 } = args;
+    const { pageNumber, reciterId = 7, tafsirId = 167, translationId = 20 } = args;
     
     try {
       // Build the API URL with proper parameters
@@ -48,7 +48,9 @@ export const getPageData = action({
         juz_number: verse.juz_number || 1,
         hizb_number: verse.hizb_number || 1,
         rub_number: verse.rub_number || 1,
-        audio: verse.audio || null
+        audio: verse.audio || null,
+        translations: verse.translations || [],
+        tafsirs: verse.tafsirs || [],
       }));
       
       return {
@@ -188,7 +190,7 @@ export const getUserPreferences = query({
     return prefs || {
       selectedReciter: 7, // Default to Al-Afasy
       selectedTafsir: 167, // Default to Jalalayn
-      selectedTranslation: 131, // Default to Sahih International
+      selectedTranslation: 20, // Default to Sahih International
       theme: "light",
       fontSize: "medium",
       arabicFont: "uthmani",
@@ -227,7 +229,7 @@ export const updateUserPreferences = mutation({
         userId,
         selectedReciter: 7,
         selectedTafsir: 167,
-        selectedTranslation: 131,
+        selectedTranslation: 20,
         theme: "light",
         fontSize: "medium",
         arabicFont: "uthmani",
