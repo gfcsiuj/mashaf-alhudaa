@@ -26,6 +26,7 @@ const applicationTables = {
     userId: v.id("users"),
     selectedReciter: v.number(),
     selectedTafsir: v.number(),
+    selectedTranslation: v.number(), // Added this line
     theme: v.string(), // "light", "dark", "sepia"
     fontSize: v.string(), // "small", "medium", "large"
     arabicFont: v.string(), // "uthmani", "indopak", "qpc"

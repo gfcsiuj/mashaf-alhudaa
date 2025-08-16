@@ -46,7 +46,6 @@ export function QuranReader() {
   
   // Convex hooks
   const getPageData = useAction(api.quran.getPageData);
-  const getPageAudio = useAction(api.quran.getPageAudio);
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const updateProgress = useMutation(api.quran.updateReadingProgress);
   
@@ -61,28 +60,30 @@ export function QuranReader() {
     try {
       console.log("Loading page:", pageNumber);
       
-      // Get page data and audio in parallel
-      const [data, audio] = await Promise.all([
-        getPageData({
-          pageNumber,
-          reciterId: userPreferences?.selectedReciter || 7,
-          tafsirId: userPreferences?.selectedTafsir || 167,
-        }),
-        getPageAudio({
-          pageNumber,
-          reciterId: userPreferences?.selectedReciter || 7,
-        })
-      ]);
+      // Get all page data in a single, unified request
+      const data = await getPageData({
+        pageNumber,
+        reciterId: userPreferences?.selectedReciter || 7,
+        tafsirId: userPreferences?.selectedTafsir || 167,
+        translationId: userPreferences?.selectedTranslation || 131,
+      });
       
       console.log("Page data loaded:", data);
-      console.log("Audio data loaded:", audio);
       
       if (!data || !data.verses || data.verses.length === 0) {
         throw new Error("لا توجد آيات في هذه الصفحة");
       }
       
       setPageData(data);
-      setAudioPlaylist(audio || []);
+      // The audio playlist is now derived from the main page data
+      const playlist = data.verses
+        .filter((verse: any) => verse.audio?.url)
+        .map((verse: any) => ({
+          verseKey: verse.verse_key,
+          audioUrl: verse.audio.url,
+          duration: verse.audio.duration || 0
+        }));
+      setAudioPlaylist(playlist);
       setCurrentPage(pageNumber);
       
       // Update reading progress
@@ -147,7 +148,7 @@ export function QuranReader() {
       console.log("Preferences changed, reloading page");
       loadPage(currentPage);
     }
-  }, [userPreferences?.selectedReciter, userPreferences?.selectedTafsir]);
+  }, [userPreferences?.selectedReciter, userPreferences?.selectedTafsir, userPreferences?.selectedTranslation]);
 
   // Touch handlers for swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {

@@ -4,17 +4,18 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 
 // Get page data with caching
 export const getPageData = action({
-  args: { 
+  args: {
     pageNumber: v.number(),
     reciterId: v.optional(v.number()),
-    tafsirId: v.optional(v.number())
+    tafsirId: v.optional(v.number()),
+    translationId: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { pageNumber, reciterId = 7, tafsirId = 167 } = args;
+    const { pageNumber, reciterId = 7, tafsirId = 167, translationId = 131 } = args;
     
     try {
       // Build the API URL with proper parameters
-      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&tafsirs=${tafsirId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
+      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?language=ar&words=false&translations=${translationId}&tafsirs=${tafsirId}&audio=${reciterId}&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number,audio,tafsirs,translations`;
       
       console.log("Fetching from URL:", url);
       
@@ -84,42 +85,6 @@ export const getVerseAudio = action({
     } catch (error) {
       console.error("Error fetching verse audio:", error);
       throw new Error("Failed to fetch verse audio");
-    }
-  },
-});
-
-// Get page audio playlist
-export const getPageAudio = action({
-  args: { 
-    pageNumber: v.number(),
-    reciterId: v.optional(v.number())
-  },
-  handler: async (ctx, args) => {
-    const { pageNumber, reciterId = 7 } = args;
-    
-    try {
-      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // Extract audio URLs
-      const audioPlaylist = data.verses
-        ?.filter((verse: any) => verse.audio?.url)
-        .map((verse: any) => ({
-          verseKey: verse.verse_key,
-          audioUrl: verse.audio.url,
-          duration: verse.audio.duration || 0
-        })) || [];
-      
-      return audioPlaylist;
-    } catch (error) {
-      console.error("Error fetching page audio:", error);
-      throw new Error("Failed to fetch page audio");
     }
   },
 });
@@ -223,6 +188,7 @@ export const getUserPreferences = query({
     return prefs || {
       selectedReciter: 7, // Default to Al-Afasy
       selectedTafsir: 167, // Default to Jalalayn
+      selectedTranslation: 131, // Default to Sahih International
       theme: "light",
       fontSize: "medium",
       arabicFont: "uthmani",
@@ -237,6 +203,7 @@ export const updateUserPreferences = mutation({
   args: {
     selectedReciter: v.optional(v.number()),
     selectedTafsir: v.optional(v.number()),
+    selectedTranslation: v.optional(v.number()),
     theme: v.optional(v.string()),
     fontSize: v.optional(v.string()),
     arabicFont: v.optional(v.string()),
@@ -260,6 +227,7 @@ export const updateUserPreferences = mutation({
         userId,
         selectedReciter: 7,
         selectedTafsir: 167,
+        selectedTranslation: 131,
         theme: "light",
         fontSize: "medium",
         arabicFont: "uthmani",

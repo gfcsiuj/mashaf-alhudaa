@@ -14,6 +14,8 @@ interface Verse {
     url: string;
     duration?: number;
   };
+  translations?: { text: string }[];
+  tafsirs?: { text: string }[];
 }
 
 interface QuranPageProps {
@@ -29,7 +31,6 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences }: Q
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   
   const addBookmark = useMutation(api.quran.addBookmark);
-  const getVerseAudio = useAction(api.quran.getVerseAudio);
 
   // Handle long press on verse
   const handleVerseLongPress = (verse: Verse, event: React.MouseEvent) => {
@@ -62,25 +63,18 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences }: Q
   };
 
   // Handle verse audio playback
-  const handlePlayVerse = async () => {
+  const handlePlayVerse = () => {
     if (!selectedVerse) return;
 
-    try {
-      const audioData = await getVerseAudio({ 
-        verseKey: selectedVerse,
-        reciterId: userPreferences?.selectedReciter || 7
-      });
-      
-      if (audioData?.url) {
-        const audio = new Audio(audioData.url);
-        audio.play();
-        toast.success("بدء تشغيل الآية");
-      } else {
-        toast.error("لا يتوفر صوت لهذه الآية");
-      }
-    } catch (error) {
-      toast.error("خطأ في تشغيل الصوت");
-      console.error("Error playing verse:", error);
+    const verse = verses.find(v => v.verse_key === selectedVerse);
+    if (verse?.audio?.url) {
+      // The AUDIO_BASE_URL might be needed if the URL is relative
+      const AUDIO_BASE_URL = "https://verses.quran.com/";
+      const audio = new Audio(AUDIO_BASE_URL + verse.audio.url);
+      audio.play();
+      toast.success(`جاري تشغيل الآية ${verse.verse_key}`);
+    } else {
+      toast.error("لا يتوفر ملف صوتي لهذه الآية بالقارئ المحدد.");
     }
     
     setShowVerseMenu(false);
@@ -271,17 +265,35 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences }: Q
 
         {/* Translation */}
         {showTranslation && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-            <h3 className="font-semibold text-blue-800 mb-2 font-ui">الترجمة</h3>
-            <p className="text-blue-700 font-ui">الترجمة ستكون متاحة قريباً</p>
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="font-semibold text-blue-800 mb-4 font-ui text-lg">الترجمة</h3>
+            <div className="space-y-4">
+              {verses.map((verse) => (
+                verse.translations?.[0]?.text && (
+                  <div key={`trans-${verse.id}`} className="pb-2">
+                    <span className="font-bold text-sm text-gray-600">({verse.verse_key})</span>
+                    <p className="text-gray-700 font-serif leading-relaxed">{verse.translations[0].text}</p>
+                  </div>
+                )
+              ))}
+            </div>
           </div>
         )}
 
         {/* Tafsir */}
         {showTafsir && (
-          <div className="mt-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-            <h3 className="font-semibold text-green-800 mb-2 font-ui">التفسير</h3>
-            <p className="text-green-700 font-ui">التفسير سيكون متاحاً قريباً</p>
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="font-semibold text-green-800 mb-4 font-ui text-lg">التفسير</h3>
+            <div className="space-y-4">
+              {verses.map((verse) => (
+                verse.tafsirs?.[0]?.text && (
+                  <div key={`tafsir-${verse.id}`} className="pb-2">
+                    <span className="font-bold text-sm text-gray-600">({verse.verse_key})</span>
+                    <p className="text-gray-800 font-ui leading-relaxed" dangerouslySetInnerHTML={{ __html: verse.tafsirs[0].text }}></p>
+                  </div>
+                )
+              ))}
+            </div>
           </div>
         )}
       </div>

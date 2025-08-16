@@ -14,6 +14,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [settings, setSettings] = useState({
     selectedReciter: 7,
     selectedTafsir: 167,
+    selectedTranslation: 131,
     theme: "light",
     fontSize: "medium",
     arabicFont: "uthmani",
@@ -28,6 +29,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       setSettings({
         selectedReciter: userPreferences.selectedReciter || 7,
         selectedTafsir: userPreferences.selectedTafsir || 167,
+        selectedTranslation: userPreferences.selectedTranslation || 131,
         theme: userPreferences.theme || "light",
         fontSize: userPreferences.fontSize || "medium",
         arabicFont: userPreferences.arabicFont || "uthmani",
@@ -66,6 +68,16 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     { id: 168, name: "تفسير ابن كثير" },
     { id: 169, name: "تفسير الطبري" },
     { id: 170, name: "تفسير القرطبي" },
+  ];
+
+  const translations = [
+    { id: 131, name: "مجمع الملك فهد (إنجليزية)" },
+    { id: 20, name: "صحيح الدولية" },
+    { id: 84, name: "تقي عثماني (إنجليزية)" },
+    { id: 31, name: "محمد حميد الله (فرنسية)" },
+    { id: 83, name: "الشيخ عيسى غارسيا (إسبانية)" },
+    { id: 77, name: "ترجمة ديانت (تركية)" },
+    { id: 33, name: "وزارة الشؤون الإسلامية الإندونيسية" },
   ];
 
   return (
@@ -192,6 +204,23 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 {tafsirs.map((tafsir) => (
                   <option key={tafsir.id} value={tafsir.id}>
                     {tafsir.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">
+                الترجمة المفضلة
+              </label>
+              <select
+                value={settings.selectedTranslation}
+                onChange={(e) => handleSettingChange('selectedTranslation', parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+              >
+                {translations.map((translation) => (
+                  <option key={translation.id} value={translation.id}>
+                    {translation.name}
                   </option>
                 ))}
               </select>
