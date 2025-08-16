@@ -27,6 +27,14 @@ export function AudioPlayer({ playlist, currentPage, showControls, selectedRecit
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const getVerseAudio = useAction(api.quran.getVerseAudio);
 
+  // Function to format time in minutes:seconds
+  const formatTime = (time: number) => {
+    if (!time || !isFinite(time)) return "0:00";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   // Initialize audio when playlist changes
   useEffect(() => {
     if (playlist.length > 0 && audioRef.current) {
@@ -194,23 +202,27 @@ export function AudioPlayer({ playlist, currentPage, showControls, selectedRecit
             reciterId: selectedReciter
           });
           
-          if (audioData?.url) {
-            audioRef.current.src = audioData.url;
-            audioRef.current.load();
-            if (isPlaying) {
-              await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
-              await audioRef.current.play();
+          if (!audioData?.url) {
+            throw new Error("رابط الصوت غير متاح");
+          }
+          
+          audioRef.current.src = audioData.url;
+          audioRef.current.load();
+          
+          if (isPlaying) {
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              await playPromise;
             }
-          } else {
-            throw new Error("لا يتوفر صوت لهذه الآية");
           }
         } catch (error) {
-          console.error("Error playing next track:", error);
-          setIsPlaying(false);
+          console.error("Error loading next track:", error);
           setHasError(true);
-          toast.error("خطأ في تشغيل الآية التالية");
+          toast.error("خطأ في تحميل الصوت التالي");
         }
       }
+    } else {
+      toast.info("نهاية قائمة التشغيل");
     }
   };
 
@@ -231,110 +243,61 @@ export function AudioPlayer({ playlist, currentPage, showControls, selectedRecit
             reciterId: selectedReciter
           });
           
-          if (audioData?.url) {
-            audioRef.current.src = audioData.url;
-            audioRef.current.load();
-            if (isPlaying) {
-              await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
-              await audioRef.current.play();
+          if (!audioData?.url) {
+            throw new Error("رابط الصوت غير متاح");
+          }
+          
+          audioRef.current.src = audioData.url;
+          audioRef.current.load();
+          
+          if (isPlaying) {
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              await playPromise;
             }
-          } else {
-            throw new Error("لا يتوفر صوت لهذه الآية");
           }
         } catch (error) {
-          console.error("Error playing previous track:", error);
-            setIsPlaying(false);
-            setHasError(true);
-            toast.error("خطأ في تشغيل الآية السابقة");
-          }
+          console.error("Error loading previous track:", error);
+          setHasError(true);
+          toast.error("خطأ في تحميل الصوت السابق");
         }
       }
+    } else {
+      toast.info("بداية قائمة التشغيل");
     }
   };
 
-  // Audio event handlers
+  // Handle time update
   const handleTimeUpdate = () => {
-    if (audioRef.current && !isNaN(audioRef.current.currentTime)) {
+    if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
     }
   };
 
-  const handleLoadedMetadata = () => {
-    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+  // Handle duration change
+  const handleDurationChange = () => {
+    if (audioRef.current && isFinite(audioRef.current.duration)) {
       setDuration(audioRef.current.duration);
-      setIsReady(true);
-      console.log("Audio metadata loaded, duration:", audioRef.current.duration);
     }
   };
 
+  // Handle track end
   const handleEnded = () => {
     setIsPlaying(false);
-    if (currentTrackIndex < playlist.length - 1) {
-      nextTrack();
-    } else {
-      toast.success("انتهت تلاوة الصفحة");
-      setCurrentTrackIndex(0);
-      setCurrentTime(0);
-    }
+    nextTrack();
   };
 
+  // Handle audio errors
   const handleError = (e: any) => {
     console.error("Audio error:", e);
-    setIsPlaying(false);
-    setIsLoading(false);
     setHasError(true);
-    
-    // Get more specific error information
-    if (audioRef.current?.error) {
-      const error = audioRef.current.error;
-      console.error("Audio error code:", error.code, "message:", error.message);
-      
-      let errorMessage = "خطأ في تحميل الملف الصوتي";
-      switch (error.code) {
-        case 1: // MEDIA_ERR_ABORTED
-          errorMessage = "تم إلغاء تحميل الصوت";
-          break;
-        case 2: // MEDIA_ERR_NETWORK
-          errorMessage = "خطأ في الشبكة أثناء تحميل الصوت";
-          break;
-        case 3: // MEDIA_ERR_DECODE
-          errorMessage = "خطأ في فك تشفير الملف الصوتي";
-          break;
-        case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
-          errorMessage = "تنسيق الملف الصوتي غير مدعوم";
-          break;
-      }
-      
-      toast.error(errorMessage);
-    }
+    setIsPlaying(false);
+    toast.error("خطأ في تشغيل الصوت");
   };
 
-  const handleCanPlay = () => {
-    setIsReady(true);
-    setIsLoading(false);
-    setHasError(false);
-    console.log("Audio can play");
-  };
-
-  const handleLoadStart = () => {
-    setIsLoading(true);
-    setHasError(false);
-    console.log("Audio load started");
-  };
-
-  const handleWaiting = () => {
-    setIsLoading(true);
-    console.log("Audio waiting for data");
-  };
-
-  const handlePlaying = () => {
-    setIsLoading(false);
-    console.log("Audio playing");
-  };
-
-  // Seek to position
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || !duration || hasError) return;
+  // Handle progress bar click
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !duration) return;
     
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -345,15 +308,10 @@ export function AudioPlayer({ playlist, currentPage, showControls, selectedRecit
     setCurrentTime(newTime);
   };
 
-  // Format time
-  const formatTime = (time: number) => {
-    if (!time || !isFinite(time)) return "0:00";
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  if (!showControls || playlist.length === 0) return null;
+  // Don't render if no controls or playlist
+  if (!showControls || playlist.length === 0) {
+    return null;
+  }
 
   const currentTrack = playlist[currentTrackIndex];
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -369,45 +327,34 @@ export function AudioPlayer({ playlist, currentPage, showControls, selectedRecit
                 <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
               </svg>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-gray-800 truncate font-ui">
-                {currentTrack ? `الآية ${currentTrack.verseKey}` : 'صفحة ' + currentPage}
-              </p>
-              <p className="text-xs text-gray-500 font-ui">
-                {currentTrackIndex + 1} من {playlist.length}
-                {hasError && <span className="text-red-500 mr-2">• خطأ في التحميل</span>}
-              </p>
+            <div className="truncate">
+              <div className="text-sm font-medium truncate">
+                {currentTrack?.verseKey || "لا يوجد صوت"}
+              </div>
             </div>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-2">
-            <button
+          <div className="flex items-center gap-3">
+            <button 
               onClick={prevTrack}
-              disabled={currentTrackIndex === 0}
-              className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="السابق"
+              disabled={currentTrackIndex === 0 || isLoading}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
               </svg>
             </button>
             
-            <button
+            <button 
               onClick={togglePlayPause}
-              disabled={isLoading}
-              className={`p-2 rounded-lg transition-colors ${
-                hasError 
-                  ? 'bg-red-500 hover:bg-red-600 text-white' 
-                  : 'bg-[#8b7355] hover:bg-[#6b5b47] text-white'
-              } disabled:opacity-50`}
-              title={hasError ? "إعادة المحاولة" : isPlaying ? "إيقاف" : "تشغيل"}
+              disabled={hasError}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-[#8b7355] text-white hover:bg-[#7a6548] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
-                <div className="w-5 h-5 spinner border-white border-t-transparent"></div>
-              ) : hasError ? (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               ) : isPlaying ? (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -420,53 +367,39 @@ export function AudioPlayer({ playlist, currentPage, showControls, selectedRecit
               )}
             </button>
             
-            <button
+            <button 
               onClick={nextTrack}
-              disabled={currentTrackIndex === playlist.length - 1}
-              className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="التالي"
+              disabled={currentTrackIndex === playlist.length - 1 || isLoading}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
               </svg>
             </button>
           </div>
-
-          {/* Time Display */}
-          <div className="text-xs text-gray-500 ml-4 font-ui min-w-[60px] text-left">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </div>
         </div>
-
-        {/* Progress Bar */}
-        {duration > 0 && !hasError && (
-          <div className="progress-bar" onClick={handleSeek}>
+        
+        {/* Progress bar */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 w-8 text-right">{formatTime(currentTime)}</span>
+          <div 
+            className="h-1.5 bg-gray-200 rounded-full flex-1 cursor-pointer"
+            onClick={handleProgressClick}
+          >
             <div 
-              className="progress-fill" 
+              className="h-full bg-[#8b7355] rounded-full"
               style={{ width: `${progress}%` }}
-            >
-              <div className="progress-handle"></div>
-            </div>
+            ></div>
           </div>
-        )}
-
-        {/* Error indicator */}
-        {hasError && (
-          <div className="mt-2 text-xs text-red-500 text-center font-ui">
-            خطأ في تحميل الصوت - انقر على زر التشغيل لإعادة المحاولة
-          </div>
-        )}
+          <span className="text-xs text-gray-500 w-8">{formatTime(duration)}</span>
+        </div>
       </div>
-
-      {/* Hidden Audio Element with all event handlers */}
+      
+      {/* Hidden audio element */}
       <audio
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onCanPlay={handleCanPlay}
-        onLoadStart={handleLoadStart}
-        onWaiting={handleWaiting}
-        onPlaying={handlePlaying}
+        onDurationChange={handleDurationChange}
         onEnded={handleEnded}
         onError={handleError}
         preload="metadata"
