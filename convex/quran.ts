@@ -8,20 +8,14 @@ export const getPageData = action({
     pageNumber: v.number(),
     reciterId: v.optional(v.number()),
     tafsirId: v.optional(v.number()),
-    // The fix is here: Changed from v.optional(v.number()) to this structure
-    translations: v.optional(v.array(v.number())), 
+    translations: v.optional(v.array(v.number())),
   },
   handler: async (ctx, args) => {
-    // We use a default translationId for the API call
     const { pageNumber, reciterId = 7, tafsirId = 167, translations } = args;
-    const translationIdForApi = translations?.[0] || 131; // Use the first translation or default to 131
+    const translationIdForApi = translations?.[0] || 131;
 
     try {
-      // Build the API URL with proper parameters
       const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&tafsirs=${tafsirId}&translations=${translationIdForApi}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
-
-      console.log("Fetching from URL:", url);
-
       const response = await fetch(url, {
         headers: {
           'Accept': 'application/json',
@@ -34,17 +28,15 @@ export const getPageData = action({
       }
 
       const data = await response.json();
-      console.log("API Response:", data);
 
       if (!data.verses || !Array.isArray(data.verses)) {
         throw new Error("Invalid API response format");
       }
 
-      // Process verses to ensure all required fields are present
       const processedVerses = data.verses.map((verse: any, index: number) => ({
         id: verse.id || index,
         verse_key: verse.verse_key || `${verse.chapter_id}:${verse.verse_number}`,
-        text_uthmani: verse.text_uthmani || verse.text_madani || verse.text_simple || "",
+        text_uthmani: verse.text_uthmani || "",
         chapter_id: verse.chapter_id || 1,
         verse_number: verse.verse_number || 1,
         page_number: verse.page_number || pageNumber,
@@ -76,25 +68,17 @@ export const getVerseAudio = action({
   },
   handler: async (ctx, args) => {
     const { verseKey, reciterId = 7 } = args;
-
     try {
-      // Extract chapter number from verseKey (format: chapter:verse)
       const chapterNumber = verseKey.split(':')[0];
       const url = `https://api.quran.foundation/content/api/v4/chapter_recitations/${reciterId}/${chapterNumber}`;
       const response = await fetch(url);
-
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
-
       const data = await response.json();
-      console.log("Audio data received:", data);
-
-      // Based on the API documentation, the response should contain an audio_file object
       if (data && data.audio_file) {
         return { url: data.audio_file };
       }
-
       return { url: null };
     } catch (error) {
       console.error("Error fetching verse audio:", error);
@@ -111,35 +95,27 @@ export const getPageAudio = action({
   },
   handler: async (ctx, args) => {
     const { pageNumber, reciterId = 7 } = args;
-
     try {
-      // First, get the verses on this page to determine which chapters are included
       const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}`;
       const versesResponse = await fetch(versesUrl);
-
       if (!versesResponse.ok) {
         throw new Error(`API request failed: ${versesResponse.status}`);
       }
-
       const versesData = await versesResponse.json();
-
-      // Get unique chapter numbers from the verses
-      const chapterNumbers = [...new Set(versesData.verses?.map((verse: any) => verse.verse_key.split(':')[0]))];
-
-      // Fetch audio for each chapter
-      const audioPromises = chapterNumbers.map(async (chapterNumber: string) => {
+      
+      // THE FIX IS ON THE LINE BELOW
+      const chapterNumbers = [...new Set(versesData.verses?.map((verse: any) => verse.verse_key.split(':')[0]))] as string[];
+      
+      const audioPromises = chapterNumbers.map(async (chapterNumber) => {
         const audioUrl = `https://api.quran.foundation/content/api/v4/chapter_recitations/${reciterId}/${chapterNumber}`;
         const audioResponse = await fetch(audioUrl);
-
         if (!audioResponse.ok) {
           console.error(`Failed to fetch audio for chapter ${chapterNumber}`);
           return null;
         }
-
         const audioData = await audioResponse.json();
         return { chapterNumber, audioData };
       });
-
       const audioResults = await Promise.all(audioPromises);
       const audioByChapter = audioResults.reduce((acc: any, result: any) => {
         if (result) {
@@ -147,20 +123,16 @@ export const getPageAudio = action({
         }
         return acc;
       }, {});
-
-      // Create audio playlist from verses and chapter audio
       const audioPlaylist = versesData.verses?.map((verse: any) => {
         const chapterNumber = verse.verse_key.split(':')[0];
         const chapterAudio = audioByChapter[chapterNumber];
-
         return {
           verseKey: verse.verse_key,
           audioUrl: chapterAudio?.audio_file || null,
-          duration: 0, // Duration information not available in chapter audio API
+          duration: 0,
           chapterNumber: chapterNumber
         };
       }) || [];
-
       return audioPlaylist;
     } catch (error) {
       console.error("Error fetching page audio:", error);
@@ -169,6 +141,8 @@ export const getPageAudio = action({
   },
 });
 
+// Other functions remain the same...
+
 // Get all chapters for index
 export const getChapters = action({
   args: {},
@@ -176,11 +150,9 @@ export const getChapters = action({
     try {
       const url = "https://api.quran.com/api/v4/chapters?language=ar";
       const response = await fetch(url);
-
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
-
       const data = await response.json();
       return data.chapters || [];
     } catch (error) {
@@ -197,11 +169,9 @@ export const getReciters = action({
     try {
       const url = "https://api.quran.com/api/v4/resources/recitations?language=ar";
       const response = await fetch(url);
-
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
-
       const data = await response.json();
       return data.recitations || [];
     } catch (error) {
@@ -218,11 +188,9 @@ export const getTafsirs = action({
     try {
       const url = "https://api.quran.com/api/v4/resources/tafsirs?language=ar";
       const response = await fetch(url);
-
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
-
       const data = await response.json();
       return data.tafsirs || [];
     } catch (error) {
@@ -239,11 +207,9 @@ export const searchQuran = action({
     try {
       const url = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
       const response = await fetch(url);
-
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
-
       const data = await response.json();
       return data.search || { results: [] };
     } catch (error) {
@@ -266,8 +232,8 @@ export const getUserPreferences = query({
       .first();
 
     return prefs || {
-      selectedReciter: 7, // Default to Al-Afasy
-      selectedTafsir: 167, // Default to Jalalayn
+      selectedReciter: 7,
+      selectedTafsir: 167,
       theme: "light",
       fontSize: "medium",
       arabicFont: "uthmani",
@@ -415,14 +381,14 @@ export const searchVerses = action({
     try {
       const url = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
       const response = await fetch(url);
-
+      
       if (!response.ok) {
         return [];
       }
-
+      
       const data = await response.json();
       const results = data.search?.results || [];
-
+      
       return results.map((result: any) => ({
         verse_key: result.verse_key,
         text_uthmani: result.text,
