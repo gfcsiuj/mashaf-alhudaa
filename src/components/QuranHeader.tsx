@@ -1,5 +1,7 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { AudioPlayer } from "./AudioPlayer";
+import { useState } from "react";
 
 interface Verse {
   chapter_id: number;
@@ -11,9 +13,10 @@ interface QuranHeaderProps {
   verses: Verse[];
   showControls: boolean;
   onOpenPanel: (panel: string) => void;
+  audioPlaylist?: any[];
 }
 
-export function QuranHeader({ currentPage, verses, showControls, onOpenPanel }: QuranHeaderProps) {
+export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, audioPlaylist }: QuranHeaderProps) {
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const firstVerse = verses[0];
   const chapterName = getChapterName(firstVerse?.chapter_id);
@@ -30,7 +33,8 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel }: 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 z-40 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center justify-between">
           {/* Left: App Title with Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg overflow-hidden bg-white shadow-sm border border-gray-200 flex items-center justify-center">
@@ -119,6 +123,18 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel }: 
               </svg>
             </button>
           </div>
+          </div>
+          
+          {/* Audio Player in Header */}
+          {audioPlaylist && audioPlaylist.length > 0 && (
+            <div className="audio-player-header">
+              <AudioPlayer 
+                playlist={audioPlaylist} 
+                showControls={true} 
+                isInHeader={true}
+              />
+            </div>
+          )}
         </div>
       </div>
     </header>

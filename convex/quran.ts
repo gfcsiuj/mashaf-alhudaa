@@ -7,14 +7,15 @@ export const getPageData = action({
   args: { 
     pageNumber: v.number(),
     reciterId: v.optional(v.number()),
-    tafsirId: v.optional(v.number())
+    tafsirId: v.optional(v.number()),
+    translationId: v.optional(v.number())
   },
   handler: async (ctx, args) => {
-    const { pageNumber, reciterId = 7, tafsirId = 167 } = args;
+    const { pageNumber, reciterId = 7, tafsirId = 167, translationId = 131 } = args;
     
     try {
       // Build the API URL with proper parameters
-      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&tafsirs=${tafsirId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
+      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&tafsirs=${tafsirId}&translations=${translationId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
       
       console.log("Fetching from URL:", url);
       
@@ -47,7 +48,9 @@ export const getPageData = action({
         juz_number: verse.juz_number || 1,
         hizb_number: verse.hizb_number || 1,
         rub_number: verse.rub_number || 1,
-        audio: verse.audio || null
+        audio: verse.audio || null,
+        translations: verse.translations || [],
+        tafsirs: verse.tafsirs || []
       }));
       
       return {
@@ -72,7 +75,9 @@ export const getVerseAudio = action({
     const { verseKey, reciterId = 7 } = args;
     
     try {
-      const url = `https://api.quran.com/api/v4/verses/by_key/${verseKey}?audio=${reciterId}`;
+      // Extract chapter number from verseKey (format: chapter:verse)
+      const chapterNumber = verseKey.split(':')[0];
+      const url = `https://api.quran.foundation/content/api/v4/chapter_recitations/${reciterId}/${chapterNumber}`;
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -80,7 +85,14 @@ export const getVerseAudio = action({
       }
       
       const data = await response.json();
-      return data.verse?.audio || null;
+      console.log("Audio data received:", data);
+      
+      // Based on the API documentation, the response should contain an audio_file object
+      if (data && data.audio_file) {
+        return { url: data.audio_file };
+      }
+      
+      return { url: null };
     } catch (error) {
       console.error("Error fetching verse audio:", error);
       throw new Error("Failed to fetch verse audio");
@@ -98,23 +110,53 @@ export const getPageAudio = action({
     const { pageNumber, reciterId = 7 } = args;
     
     try {
-      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}`;
-      const response = await fetch(url);
+      // First, get the verses on this page to determine which chapters are included
+      const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}`;
+      const versesResponse = await fetch(versesUrl);
       
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+      if (!versesResponse.ok) {
+        throw new Error(`API request failed: ${versesResponse.status}`);
       }
       
-      const data = await response.json();
+      const versesData = await versesResponse.json();
       
-      // Extract audio URLs
-      const audioPlaylist = data.verses
-        ?.filter((verse: any) => verse.audio?.url)
-        .map((verse: any) => ({
+      // Get unique chapter numbers from the verses
+      const chapterNumbers = [...new Set(versesData.verses?.map((verse: any) => verse.verse_key.split(':')[0]))];
+      
+      // Fetch audio for each chapter
+      const audioPromises = chapterNumbers.map(async (chapterNumber: string) => {
+        const audioUrl = `https://api.quran.foundation/content/api/v4/chapter_recitations/${reciterId}/${chapterNumber}`;
+        const audioResponse = await fetch(audioUrl);
+        
+        if (!audioResponse.ok) {
+          console.error(`Failed to fetch audio for chapter ${chapterNumber}`);
+          return null;
+        }
+        
+        const audioData = await audioResponse.json();
+        return { chapterNumber, audioData };
+      });
+      
+      const audioResults = await Promise.all(audioPromises);
+      const audioByChapter = audioResults.reduce((acc: any, result: any) => {
+        if (result) {
+          acc[result.chapterNumber] = result.audioData;
+        }
+        return acc;
+      }, {});
+      
+      // Create audio playlist from verses and chapter audio
+      const audioPlaylist = versesData.verses?.map((verse: any) => {
+        const chapterNumber = verse.verse_key.split(':')[0];
+        const chapterAudio = audioByChapter[chapterNumber];
+        
+        return {
           verseKey: verse.verse_key,
-          audioUrl: verse.audio.url,
-          duration: verse.audio.duration || 0
-        })) || [];
+          audioUrl: chapterAudio?.audio_file || null,
+          duration: 0, // Duration information not available in chapter audio API
+          chapterNumber: chapterNumber
+        };
+      }) || [];
       
       return audioPlaylist;
     } catch (error) {

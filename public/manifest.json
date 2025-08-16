@@ -12,12 +12,11 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/vite.svg",
+      "src": "/quran-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable any"
     }
-
   ],
   "categories": ["education", "books", "lifestyle"],
   "screenshots": [

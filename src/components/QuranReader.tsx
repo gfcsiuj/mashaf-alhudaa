@@ -12,6 +12,9 @@ import { BookmarksPanel } from "./BookmarksPanel";
 import { RemindersPanel } from "./RemindersPanel";
 import { AudioPlayer } from "./AudioPlayer";
 
+// تعريف الرابط الأساسي للصوتيات
+export const AUDIO_BASE_URL = 'https://verses.quran.com/';
+
 interface Verse {
   id: number;
   verse_key: string;
@@ -41,11 +44,15 @@ export function QuranReader() {
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [currentVerseAudio, setCurrentVerseAudio] = useState<string | null>(null);
   
   // Global State Variables - مصدر الحقيقة الوحيد في التطبيق
-  const [selectedReciter, setSelectedReciter] = useState(7); // Default to Al-Afasy
-  const [selectedTafsir, setSelectedTafsir] = useState(167); // Default to Jalalayn
-  const [selectedTranslation, setSelectedTranslation] = useState(131); // Default translation
+  // تحميل الإعدادات من localStorage إذا كانت موجودة
+  const localSettings = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('quranSettings') || '{}') : {};
+  const [selectedReciter, setSelectedReciter] = useState(localSettings.selectedReciter || 7); // Default to Al-Afasy
+  const [selectedTafsir, setSelectedTafsir] = useState(localSettings.selectedTafsir || 167); // Default to Jalalayn
+  const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131); // Default translation
+  const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'light'); // إضافة حالة للثيم الحالي
   
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -88,7 +95,29 @@ export function QuranReader() {
       }
       
       setPageData(data);
-      setAudioPlaylist(audio || []);
+      
+      // إضافة الرابط الأساسي لكل ملف صوتي في قائمة التشغيل
+      const completeAudioPlaylist = (audio || []).map(item => {
+        // التأكد من أن الرابط صالح وكامل
+        let fullUrl = null;
+        if (item.audioUrl) {
+          // إذا كان الرابط يبدأ بـ http فهو كامل بالفعل
+          if (item.audioUrl.startsWith('http')) {
+            fullUrl = item.audioUrl;
+          } else {
+            // وإلا نضيف الرابط الأساسي
+            fullUrl = AUDIO_BASE_URL + item.audioUrl;
+          }
+          console.log(`Original URL: ${item.audioUrl}, Full URL: ${fullUrl}`);
+        }
+        
+        return {
+          ...item,
+          url: fullUrl
+        };
+      }).filter(item => item.url !== null); // استبعاد العناصر التي ليس لها رابط صالح
+      
+      setAudioPlaylist(completeAudioPlaylist);
       setCurrentPage(pageNumber);
       
       // Update reading progress
@@ -118,6 +147,24 @@ export function QuranReader() {
     }
   };
 
+  // دالة لتشغيل آية محددة في مشغل الصوت الرئيسي
+  const playVerseInMainPlayer = (verseKey: string, audioUrl: string) => {
+    // إنشاء قائمة تشغيل جديدة تحتوي فقط على الآية المحددة
+    const singleVersePlaylist = [{
+      verseKey: verseKey,
+      url: audioUrl
+    }];
+    
+    // تحديث قائمة التشغيل الرئيسية
+    setAudioPlaylist(singleVersePlaylist);
+    setCurrentVerseAudio(audioUrl);
+    
+    // إذا كانت لوحة الصوت مفتوحة، أغلقها
+    if (activePanel === 'audio') {
+      setActivePanel(null);
+    }
+  };
+
   // Check for page reminders
   const checkPageReminder = (pageNumber: number) => {
     const reminders = JSON.parse(localStorage.getItem('pageReminders') || '[]');
@@ -130,6 +177,17 @@ export function QuranReader() {
     }
   };
 
+  // تطبيق الثيم الحالي على العنصر الرئيسي
+  useEffect(() => {
+    // إزالة جميع فئات الثيم السابقة
+    document.documentElement.classList.remove('theme-light', 'theme-dark', 'theme-sepia', 'theme-green');
+    
+    // إضافة فئة الثيم الحالي
+    if (currentTheme !== 'light') { // الثيم الفاتح هو الافتراضي ولا يحتاج إلى فئة
+      document.documentElement.classList.add(`theme-${currentTheme}`);
+    }
+  }, [currentTheme]);
+  
   // Initialize app
   useEffect(() => {
     const initializeApp = async () => {
@@ -181,7 +239,11 @@ export function QuranReader() {
   };
 
   // Click to toggle controls
-  const handlePageClick = () => {
+  const handlePageClick = (event: React.MouseEvent) => {
+    // منع انتشار الحدث لتجنب التأثير على مشغل الصوت
+    event.stopPropagation();
+    
+    // تبديل حالة عناصر التحكم فقط
     setShowControls(!showControls);
   };
 
@@ -216,17 +278,10 @@ export function QuranReader() {
         verses={pageData?.verses || []}
         showControls={showControls}
         onOpenPanel={setActivePanel}
+        audioPlaylist={audioPlaylist}
       />
 
-      {/* Audio Player */}
-      {audioPlaylist.length > 0 && (
-        <AudioPlayer
-          playlist={audioPlaylist}
-          currentPage={currentPage}
-          showControls={showControls}
-          selectedReciter={selectedReciter}
-        />
-      )}
+      {/* Audio Player - لا نعرضه هنا بعد الآن لأننا سننقله إلى القائمة العلوية */}
 
       {/* Main Content */}
       <main
@@ -239,11 +294,12 @@ export function QuranReader() {
       >
         <div className="py-6">
           <QuranPage
-            verses={pageData?.verses || []}
-            isLoading={isLoading}
-            currentPage={currentPage}
-            userPreferences={userPreferences}
-          />
+        verses={pageData?.verses || []}
+        isLoading={isLoading}
+        currentPage={currentPage}
+        userPreferences={userPreferences}
+        playVerseInMainPlayer={playVerseInMainPlayer}
+      />
         </div>
       </main>
 
@@ -295,6 +351,8 @@ export function QuranReader() {
           currentPage={currentPage}
         />
       )}
+
+      {/* تم إزالة لوحة الصوت المنبثقة لأننا أضفنا مشغل الصوت مباشرة في الشريط العلوي */}
 
       {activePanel === 'completion' && (
         <CompletionPanel

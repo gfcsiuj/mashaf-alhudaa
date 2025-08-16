@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
+import { AUDIO_BASE_URL } from "./QuranReader";
 
 interface Verse {
   id: number;
@@ -21,9 +22,10 @@ interface QuranPageProps {
   isLoading: boolean;
   currentPage: number;
   userPreferences: any;
+  playVerseInMainPlayer: (verseKey: string, audioUrl: string) => void;
 }
 
-export function QuranPage({ verses, isLoading, currentPage, userPreferences }: QuranPageProps) {
+export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer }: QuranPageProps) {
   const [selectedVerse, setSelectedVerse] = useState<string | null>(null);
   const [showVerseMenu, setShowVerseMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -72,8 +74,12 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences }: Q
       });
       
       if (audioData?.url) {
-        const audio = new Audio(audioData.url);
-        audio.play();
+        // إضافة الرابط الأساسي إذا كان الرابط نسبيًا
+        const audioUrl = audioData.url.startsWith('http') ? audioData.url : `${AUDIO_BASE_URL}${audioData.url}`;
+        console.log("Playing audio URL:", audioUrl);
+        
+        // استخدام مشغل الصوت الرئيسي بدلاً من إنشاء عنصر صوت جديد
+        playVerseInMainPlayer(selectedVerse, audioUrl);
         toast.success("بدء تشغيل الآية");
       } else {
         toast.error("لا يتوفر صوت لهذه الآية");
@@ -81,10 +87,10 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences }: Q
     } catch (error) {
       toast.error("خطأ في تشغيل الصوت");
       console.error("Error playing verse:", error);
+    } finally {
+      setShowVerseMenu(false);
+      setSelectedVerse(null);
     }
-    
-    setShowVerseMenu(false);
-    setSelectedVerse(null);
   };
 
   // Handle verse sharing
@@ -117,6 +123,31 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences }: Q
     
     setShowVerseMenu(false);
     setSelectedVerse(null);
+  };
+
+  // دالة لتشغيل الآية عند النقر عليها مباشرة
+  const handleVerseClick = async (verse: Verse) => {
+    try {
+      const audioData = await getVerseAudio({ 
+        verseKey: verse.verse_key,
+        reciterId: userPreferences?.selectedReciter || 7
+      });
+      
+      if (audioData?.url) {
+        // إضافة الرابط الأساسي إذا كان الرابط نسبيًا
+        const audioUrl = audioData.url.startsWith('http') ? audioData.url : `${AUDIO_BASE_URL}${audioData.url}`;
+        console.log("Playing audio URL:", audioUrl);
+        
+        // استخدام مشغل الصوت الرئيسي
+        playVerseInMainPlayer(verse.verse_key, audioUrl);
+        toast.success("بدء تشغيل الآية");
+      } else {
+        toast.error("لا يتوفر صوت لهذه الآية");
+      }
+    } catch (error) {
+      console.error("Error playing verse:", error);
+      toast.error("خطأ في تشغيل الآية");
+    }
   };
 
   // Close menu when clicking outside
@@ -247,6 +278,7 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences }: Q
             <span key={verse.id || index}>
               <span
                 className="cursor-pointer hover:bg-gray-50 rounded px-1 transition-colors duration-200"
+                onClick={() => handleVerseClick(verse)}
                 onContextMenu={(e) => handleVerseLongPress(verse, e)}
                 onTouchStart={(e) => {
                   const touch = e.touches[0];
