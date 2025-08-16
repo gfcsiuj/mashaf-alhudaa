@@ -8,19 +8,23 @@ export const getPageData = action({
     pageNumber: v.number(),
     reciterId: v.optional(v.number()),
     tafsirId: v.optional(v.number()),
-    translations: v.optional(v.array(v.number())),
+    translationId: v.optional(v.number())
   },
   handler: async (ctx, args) => {
-    const { pageNumber, reciterId = 7, tafsirId = 167, translations } = args;
-    const translationIdForApi = translations?.[0] || 131;
+    const { pageNumber, reciterId = 7, tafsirId = 167, translationId = 131 } = args;
 
     try {
-      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&tafsirs=${tafsirId}&translations=${translationIdForApi}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
+      // Build the API URL with proper parameters
+      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&tafsirs=${tafsirId}&translations=${translationId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
+
+      console.log("Fetching from URL:", url);
+
       const response = await fetch(url, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         }
+        // Removed timeout signal as it may not be supported in the current environment
       });
 
       if (!response.ok) {
@@ -28,15 +32,17 @@ export const getPageData = action({
       }
 
       const data = await response.json();
+      console.log("API Response:", data);
 
       if (!data.verses || !Array.isArray(data.verses)) {
         throw new Error("Invalid API response format");
       }
 
+      // Process verses to ensure all required fields are present
       const processedVerses = data.verses.map((verse: any, index: number) => ({
         id: verse.id || index,
         verse_key: verse.verse_key || `${verse.chapter_id}:${verse.verse_number}`,
-        text_uthmani: verse.text_uthmani || "",
+        text_uthmani: verse.text_uthmani || verse.text_madani || verse.text_simple || "",
         chapter_id: verse.chapter_id || 1,
         verse_number: verse.verse_number || 1,
         page_number: verse.page_number || pageNumber,
@@ -68,17 +74,25 @@ export const getVerseAudio = action({
   },
   handler: async (ctx, args) => {
     const { verseKey, reciterId = 7 } = args;
+
     try {
+      // Extract chapter number from verseKey (format: chapter:verse)
       const chapterNumber = verseKey.split(':')[0];
       const url = `https://api.quran.foundation/content/api/v4/chapter_recitations/${reciterId}/${chapterNumber}`;
       const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
+
       const data = await response.json();
+      console.log("Audio data received:", data);
+
+      // Based on the API documentation, the response should contain an audio_file object
       if (data && data.audio_file) {
         return { url: data.audio_file };
       }
+
       return { url: null };
     } catch (error) {
       console.error("Error fetching verse audio:", error);
@@ -95,44 +109,34 @@ export const getPageAudio = action({
   },
   handler: async (ctx, args) => {
     const { pageNumber, reciterId = 7 } = args;
+
     try {
-      const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}`;
+      // Get verses on this page with audio included
+      const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,audio`;
       const versesResponse = await fetch(versesUrl);
+
       if (!versesResponse.ok) {
         throw new Error(`API request failed: ${versesResponse.status}`);
       }
+
       const versesData = await versesResponse.json();
       
-      // THE FIX IS ON THE LINE BELOW
-      const chapterNumbers = [...new Set(versesData.verses?.map((verse: any) => verse.verse_key.split(':')[0]))] as string[];
+      if (!versesData.verses || !Array.isArray(versesData.verses)) {
+        throw new Error("Invalid API response format");
+      }
       
-      const audioPromises = chapterNumbers.map(async (chapterNumber) => {
-        const audioUrl = `https://api.quran.foundation/content/api/v4/chapter_recitations/${reciterId}/${chapterNumber}`;
-        const audioResponse = await fetch(audioUrl);
-        if (!audioResponse.ok) {
-          console.error(`Failed to fetch audio for chapter ${chapterNumber}`);
-          return null;
-        }
-        const audioData = await audioResponse.json();
-        return { chapterNumber, audioData };
-      });
-      const audioResults = await Promise.all(audioPromises);
-      const audioByChapter = audioResults.reduce((acc: any, result: any) => {
-        if (result) {
-          acc[result.chapterNumber] = result.audioData;
-        }
-        return acc;
-      }, {});
-      const audioPlaylist = versesData.verses?.map((verse: any) => {
+      // Create audio playlist directly from verses data
+      const audioPlaylist = versesData.verses.map((verse: any) => {
         const chapterNumber = verse.verse_key.split(':')[0];
-        const chapterAudio = audioByChapter[chapterNumber];
+        
         return {
           verseKey: verse.verse_key,
-          audioUrl: chapterAudio?.audio_file || null,
-          duration: 0,
+          audioUrl: verse.audio?.url ? `https://verses.quran.com/${verse.audio.url}` : null,
+          duration: 0, // Duration information not available
           chapterNumber: chapterNumber
         };
-      }) || [];
+      });
+      
       return audioPlaylist;
     } catch (error) {
       console.error("Error fetching page audio:", error);
@@ -141,8 +145,6 @@ export const getPageAudio = action({
   },
 });
 
-// Other functions remain the same...
-
 // Get all chapters for index
 export const getChapters = action({
   args: {},
@@ -150,9 +152,11 @@ export const getChapters = action({
     try {
       const url = "https://api.quran.com/api/v4/chapters?language=ar";
       const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
+
       const data = await response.json();
       return data.chapters || [];
     } catch (error) {
@@ -169,9 +173,11 @@ export const getReciters = action({
     try {
       const url = "https://api.quran.com/api/v4/resources/recitations?language=ar";
       const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
+
       const data = await response.json();
       return data.recitations || [];
     } catch (error) {
@@ -188,9 +194,11 @@ export const getTafsirs = action({
     try {
       const url = "https://api.quran.com/api/v4/resources/tafsirs?language=ar";
       const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
+
       const data = await response.json();
       return data.tafsirs || [];
     } catch (error) {
@@ -207,9 +215,11 @@ export const searchQuran = action({
     try {
       const url = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
       const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
+
       const data = await response.json();
       return data.search || { results: [] };
     } catch (error) {
@@ -232,8 +242,8 @@ export const getUserPreferences = query({
       .first();
 
     return prefs || {
-      selectedReciter: 7,
-      selectedTafsir: 167,
+      selectedReciter: 7, // Default to Al-Afasy
+      selectedTafsir: 167, // Default to Jalalayn
       theme: "light",
       fontSize: "medium",
       arabicFont: "uthmani",
@@ -381,14 +391,14 @@ export const searchVerses = action({
     try {
       const url = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         return [];
       }
-      
+
       const data = await response.json();
       const results = data.search?.results || [];
-      
+
       return results.map((result: any) => ({
         verse_key: result.verse_key,
         text_uthmani: result.text,
