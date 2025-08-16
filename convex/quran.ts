@@ -15,9 +15,9 @@ export const getPageData = action({
     
     try {
       // Build the API URL with only the essential parameters for debugging
-      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?language=ar&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
+      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?language=ar&words=false`;
       
-      console.log("Fetching from URL (minimal for debugging):", url);
+      console.log("Fetching from URL (ultra-minimal for debugging):", url);
       
       const response = await fetch(url, {
         headers: {
