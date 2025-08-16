@@ -42,6 +42,11 @@ export function QuranReader() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   
+  // Global State Variables - مصدر الحقيقة الوحيد في التطبيق
+  const [selectedReciter, setSelectedReciter] = useState(7); // Default to Al-Afasy
+  const [selectedTafsir, setSelectedTafsir] = useState(167); // Default to Jalalayn
+  const [selectedTranslation, setSelectedTranslation] = useState(131); // Default translation
+  
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Convex hooks
@@ -61,16 +66,17 @@ export function QuranReader() {
     try {
       console.log("Loading page:", pageNumber);
       
-      // Get page data and audio in parallel
+      // Get page data and audio in parallel using global state variables
       const [data, audio] = await Promise.all([
         getPageData({
           pageNumber,
-          reciterId: userPreferences?.selectedReciter || 7,
-          tafsirId: userPreferences?.selectedTafsir || 167,
+          reciterId: selectedReciter,
+          tafsirId: selectedTafsir,
+          translationId: selectedTranslation,
         }),
         getPageAudio({
           pageNumber,
-          reciterId: userPreferences?.selectedReciter || 7,
+          reciterId: selectedReciter,
         })
       ]);
       
@@ -218,6 +224,7 @@ export function QuranReader() {
           playlist={audioPlaylist}
           currentPage={currentPage}
           showControls={showControls}
+          selectedReciter={selectedReciter}
         />
       )}
 
@@ -265,8 +272,13 @@ export function QuranReader() {
       )}
       
       {activePanel === 'settings' && (
-        <SettingsPanel
-          onClose={() => setActivePanel(null)}
+        <SettingsPanel 
+          onClose={() => setActivePanel(null)} 
+          currentPage={currentPage}
+          loadPage={loadPage}
+          setSelectedReciter={setSelectedReciter}
+          setSelectedTafsir={setSelectedTafsir}
+          setSelectedTranslation={setSelectedTranslation}
         />
       )}
       

@@ -2,18 +2,25 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
+import { useRouter } from "next/router";
 
 interface SettingsPanelProps {
   onClose: () => void;
+  currentPage: number;
+  loadPage: (pageNumber: number) => Promise<void>;
+  setSelectedReciter: (reciterId: number) => void;
+  setSelectedTafsir: (tafsirId: number) => void;
+  setSelectedTranslation: (translationId: number) => void;
 }
 
-export function SettingsPanel({ onClose }: SettingsPanelProps) {
+export function SettingsPanel({ onClose, currentPage, loadPage, setSelectedReciter, setSelectedTafsir, setSelectedTranslation }: SettingsPanelProps) {
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const updatePreferences = useMutation(api.quran.updateUserPreferences);
   
   const [settings, setSettings] = useState({
     selectedReciter: 7,
     selectedTafsir: 167,
+    selectedTranslation: 131,
     theme: "light",
     fontSize: "medium",
     arabicFont: "uthmani",
@@ -28,6 +35,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       setSettings({
         selectedReciter: userPreferences.selectedReciter || 7,
         selectedTafsir: userPreferences.selectedTafsir || 167,
+        selectedTranslation: userPreferences.selectedTranslation || 131,
         theme: userPreferences.theme || "light",
         fontSize: userPreferences.fontSize || "medium",
         arabicFont: userPreferences.arabicFont || "uthmani",
@@ -43,7 +51,23 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     setSettings(newSettings);
     
     try {
+      // Update global state variables based on the setting being changed
+      if (key === 'selectedReciter') {
+        setSelectedReciter(value);
+      } else if (key === 'selectedTafsir') {
+        setSelectedTafsir(value);
+      } else if (key === 'selectedTranslation') {
+        setSelectedTranslation(value);
+      }
+      
+      // Save to backend
       await updatePreferences({ [key]: value });
+      
+      // Reload current page to apply new settings
+      if (['selectedReciter', 'selectedTafsir', 'selectedTranslation'].includes(key)) {
+        await loadPage(currentPage);
+      }
+      
       toast.success("تم حفظ الإعدادات");
     } catch (error) {
       toast.error("خطأ في حفظ الإعدادات");

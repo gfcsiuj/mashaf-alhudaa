@@ -11,9 +11,10 @@ interface AudioPlayerProps {
   }>;
   currentPage: number;
   showControls: boolean;
+  selectedReciter: number;
 }
 
-export function AudioPlayer({ playlist, currentPage, showControls }: AudioPlayerProps) {
+export function AudioPlayer({ playlist, currentPage, showControls, selectedReciter }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -24,6 +25,7 @@ export function AudioPlayer({ playlist, currentPage, showControls }: AudioPlayer
   
   const audioRef = useRef<HTMLAudioElement>(null);
   const userPreferences = useQuery(api.quran.getUserPreferences);
+  const getVerseAudio = useAction(api.quran.getVerseAudio);
 
   // Initialize audio when playlist changes
   useEffect(() => {
@@ -37,20 +39,32 @@ export function AudioPlayer({ playlist, currentPage, showControls }: AudioPlayer
       
       // Prepare the first track without playing
       const firstTrack = playlist[0];
-      if (firstTrack?.audioUrl) {
-        console.log("Loading audio URL:", firstTrack.audioUrl);
-        audioRef.current.src = firstTrack.audioUrl;
-        audioRef.current.load();
-        
-        // Auto-play if enabled
-        if (userPreferences?.autoPlay) {
-          setTimeout(() => {
-            togglePlayPause();
-          }, 1500);
-        }
+      if (firstTrack?.verseKey) {
+        // Get fresh audio URL using the global selectedReciter
+        getVerseAudio({ 
+          verseKey: firstTrack.verseKey,
+          reciterId: selectedReciter
+        }).then(audioData => {
+          if (audioData?.url && audioRef.current) {
+            console.log("Loading audio URL:", audioData.url);
+            audioRef.current.src = audioData.url;
+            audioRef.current.load();
+            
+            // Auto-play if enabled
+            if (userPreferences?.autoPlay) {
+              setTimeout(() => {
+                togglePlayPause();
+              }, 1500);
+            }
+          }
+        }).catch(error => {
+          console.error("Error loading initial audio:", error);
+          setHasError(true);
+          toast.error("خطأ في تحميل الصوت");
+        });
       }
     }
-  }, [playlist.length, currentPage]);
+  }, [playlist.length, currentPage, selectedReciter]);
 
   // Play/pause toggle with better error handling
   const togglePlayPause = async () => {
@@ -70,14 +84,24 @@ export function AudioPlayer({ playlist, currentPage, showControls }: AudioPlayer
       setHasError(false);
       
       const currentTrack = playlist[currentTrackIndex];
-      if (!currentTrack?.audioUrl) {
+      if (!currentTrack?.verseKey) {
+        throw new Error("معلومات الآية غير متاحة");
+      }
+
+      // Get fresh audio URL using the global selectedReciter
+      const audioData = await getVerseAudio({ 
+        verseKey: currentTrack.verseKey,
+        reciterId: selectedReciter
+      });
+      
+      if (!audioData?.url) {
         throw new Error("رابط الصوت غير متاح");
       }
 
       // Set up the audio source if different
-      if (audioRef.current.src !== currentTrack.audioUrl) {
-        console.log("Setting new audio source:", currentTrack.audioUrl);
-        audioRef.current.src = currentTrack.audioUrl;
+      if (audioRef.current.src !== audioData.url) {
+        console.log("Setting new audio source:", audioData.url);
+        audioRef.current.src = audioData.url;
         audioRef.current.load();
       }
 
@@ -162,18 +186,29 @@ export function AudioPlayer({ playlist, currentPage, showControls }: AudioPlayer
       setHasError(false);
       
       if (audioRef.current && playlist[nextIndex]) {
-        audioRef.current.src = playlist[nextIndex].audioUrl;
-        audioRef.current.load();
-        if (isPlaying) {
-          try {
-            await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
-            await audioRef.current.play();
-          } catch (error) {
-            console.error("Error playing next track:", error);
-            setIsPlaying(false);
-            setHasError(true);
-            toast.error("خطأ في تشغيل الآية التالية");
+        try {
+          // Get fresh audio URL using the global selectedReciter
+          const verseKey = playlist[nextIndex].verseKey;
+          const audioData = await getVerseAudio({ 
+            verseKey: verseKey,
+            reciterId: selectedReciter
+          });
+          
+          if (audioData?.url) {
+            audioRef.current.src = audioData.url;
+            audioRef.current.load();
+            if (isPlaying) {
+              await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
+              await audioRef.current.play();
+            }
+          } else {
+            throw new Error("لا يتوفر صوت لهذه الآية");
           }
+        } catch (error) {
+          console.error("Error playing next track:", error);
+          setIsPlaying(false);
+          setHasError(true);
+          toast.error("خطأ في تشغيل الآية التالية");
         }
       }
     }
@@ -188,14 +223,26 @@ export function AudioPlayer({ playlist, currentPage, showControls }: AudioPlayer
       setHasError(false);
       
       if (audioRef.current && playlist[prevIndex]) {
-        audioRef.current.src = playlist[prevIndex].audioUrl;
-        audioRef.current.load();
-        if (isPlaying) {
-          try {
-            await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
-            await audioRef.current.play();
-          } catch (error) {
-            console.error("Error playing previous track:", error);
+        try {
+          // Get fresh audio URL using the global selectedReciter
+          const verseKey = playlist[prevIndex].verseKey;
+          const audioData = await getVerseAudio({ 
+            verseKey: verseKey,
+            reciterId: selectedReciter
+          });
+          
+          if (audioData?.url) {
+            audioRef.current.src = audioData.url;
+            audioRef.current.load();
+            if (isPlaying) {
+              await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
+              await audioRef.current.play();
+            }
+          } else {
+            throw new Error("لا يتوفر صوت لهذه الآية");
+          }
+        } catch (error) {
+          console.error("Error playing previous track:", error);
             setIsPlaying(false);
             setHasError(true);
             toast.error("خطأ في تشغيل الآية السابقة");

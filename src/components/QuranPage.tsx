@@ -273,7 +273,14 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences }: Q
         {showTranslation && (
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
             <h3 className="font-semibold text-blue-800 mb-2 font-ui">الترجمة</h3>
-            <p className="text-blue-700 font-ui">الترجمة ستكون متاحة قريباً</p>
+            {verses.map((verse, index) => (
+              <div key={`translation-${verse.id || index}`} className="mb-4 last:mb-0">
+                <p className="text-gray-600 text-sm font-ui mb-1">{verse.verse_key}</p>
+                <p className="text-blue-700 font-ui">
+                  {verse.translations && verse.translations[0] ? verse.translations[0].text : "الترجمة غير متوفرة"}
+                </p>
+              </div>
+            ))}
           </div>
         )}
 
@@ -281,7 +288,14 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences }: Q
         {showTafsir && (
           <div className="mt-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
             <h3 className="font-semibold text-green-800 mb-2 font-ui">التفسير</h3>
-            <p className="text-green-700 font-ui">التفسير سيكون متاحاً قريباً</p>
+            {verses.map((verse, index) => (
+              <div key={`tafsir-${verse.id || index}`} className="mb-4 last:mb-0">
+                <p className="text-gray-600 text-sm font-ui mb-1">{verse.verse_key}</p>
+                <p className="text-green-700 font-ui">
+                  {verse.tafsirs && verse.tafsirs[0] ? verse.tafsirs[0].text : "التفسير غير متوفر"}
+                </p>
+              </div>
+            ))}
           </div>
         )}
       </div>
