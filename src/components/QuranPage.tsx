@@ -3,6 +3,7 @@ import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { AUDIO_BASE_URL } from "./QuranReader";
+import { BookOpen, FileText } from "lucide-react";
 
 interface Verse {
   id: number;
@@ -23,12 +24,64 @@ interface QuranPageProps {
   currentPage: number;
   userPreferences: any;
   playVerseInMainPlayer: (verseKey: string, audioUrl: string) => void;
-  showTranslation: boolean;
-  showTafsir: boolean;
   highlightedVerse: string | null;
 }
 
-export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer, showTranslation, showTafsir, highlightedVerse }: QuranPageProps) {
+function VerseDetail({ verse, arabicFont, playVerse, isHighlighted }: { verse: Verse, arabicFont: string, playVerse: (verse: Verse) => void, isHighlighted: boolean }) {
+  const [showTafsir, setShowTafsir] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false);
+
+  const tafsirText = verse.tafsirs?.[0]?.text || "التفسير غير متوفر.";
+  const translationText = verse.translations?.[0]?.text || "الترجمة غير متوفرة.";
+
+  const fontFamilyClasses: Record<string, string> = {
+    uthmani: 'font-quran',
+    indopak: 'font-indopak',
+    qpc: 'font-qpc'
+  };
+
+  return (
+    <div className={`verse-container mb-8 p-4 rounded-lg border bg-white shadow-sm transition-colors ${isHighlighted ? 'active-verse border-yellow-300' : 'border-gray-200'}`}>
+      <p
+        className={`${fontFamilyClasses[arabicFont]} text-2xl leading-loose text-justify cursor-pointer`}
+        onClick={() => playVerse(verse)}
+      >
+        {verse.text_uthmani}
+        <span className="verse-number">{verse.verse_number}</span>
+      </p>
+
+      <div className="verse-actions mt-4 flex items-center gap-2 border-t pt-3">
+        <button
+          onClick={() => setShowTafsir(!showTafsir)}
+          className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+        >
+          <BookOpen size={16} />
+          <span>التفسير</span>
+        </button>
+        <button
+          onClick={() => setShowTranslation(!showTranslation)}
+          className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+        >
+          <FileText size={16} />
+          <span>الترجمة</span>
+        </button>
+      </div>
+
+      {showTafsir && (
+        <div className="mt-4 p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
+          <p className="text-green-700 font-ui">{tafsirText}</p>
+        </div>
+      )}
+      {showTranslation && (
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+          <p className="text-blue-700 font-ui">{translationText}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer, highlightedVerse }: QuranPageProps) {
   const [selectedVerse, setSelectedVerse] = useState<string | null>(null);
   const [showVerseMenu, setShowVerseMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -227,14 +280,7 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
     );
   }
 
-  const fontSize = userPreferences?.fontSize || 'medium';
   const arabicFont = userPreferences?.arabicFont || 'uthmani';
-
-  const fontSizeClasses: Record<string, string> = {
-    small: 'text-lg',
-    medium: 'text-xl',
-    large: 'text-2xl'
-  };
 
   const fontFamilyClasses: Record<string, string> = {
     uthmani: 'font-quran',
@@ -242,118 +288,51 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
     qpc: 'font-qpc'
   };
 
-  // Group verses into a continuous text flow
-  const renderVersesAsFlow = () => {
-    const firstVerse = verses[0];
-    const isChapterStart = isNewChapter();
-    const chapterName = getChapterName(firstVerse?.chapter_id);
-    const shouldShowBasmala = isChapterStart && firstVerse?.chapter_id !== 9; // No Basmala for At-Tawbah
-
-    return (
-      <div className="space-y-6">
-        {/* Chapter Header */}
-        {isChapterStart && (
-          <div className="text-center space-y-4 mb-8">
-            <div className="inline-block px-6 py-3 bg-[#8b7355] text-white rounded-lg">
-              <h2 className="text-xl font-bold font-ui">سورة {chapterName}</h2>
-            </div>
-            
-            {/* Basmala */}
-            {shouldShowBasmala && (
-              <div className="text-center py-4">
-                <p className={`${fontFamilyClasses[arabicFont]} text-2xl text-[#8b7355] leading-loose`} dir="rtl">
-                  بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Verses */}
-        <div 
-          className={`${fontFamilyClasses[arabicFont]} ${fontSizeClasses[fontSize]} leading-loose text-justify`}
-          dir="rtl"
-          style={{ textAlignLast: 'center' }}
-        >
-          {verses.map((verse, index) => (
-            <span key={verse.id || index}>
-              <span
-                className={`cursor-pointer hover:bg-gray-50 rounded px-1 transition-colors duration-200 ${highlightedVerse === verse.verse_key ? 'active-verse' : ''}`}
-                onClick={() => handleVerseClick(verse)}
-                onContextMenu={(e) => handleVerseLongPress(verse, e)}
-                onTouchStart={(e) => {
-                  const touch = e.touches[0];
-                  setTimeout(() => {
-                    handleVerseLongPress(verse, {
-                      clientX: touch.clientX,
-                      clientY: touch.clientY,
-                      preventDefault: () => {},
-                    } as any);
-                  }, 500);
-                }}
-              >
-                {verse.text_uthmani || "نص الآية غير متوفر"}
-              </span>
-              <span className="verse-number">
-                {verse.verse_number}
-              </span>
-              {index < verses.length - 1 && " "}
-            </span>
-          ))}
-        </div>
-
-        {/* Translation */}
-        {showTranslation && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-            <h3 className="font-semibold text-blue-800 mb-2 font-ui">الترجمة</h3>
-            {verses.map((verse, index) => (
-              <div key={`translation-${verse.id || index}`} className="mb-4 last:mb-0">
-                <p className="text-gray-600 text-sm font-ui mb-1">{verse.verse_key}</p>
-                <p className="text-blue-700 font-ui">
-                  {verse.translations && verse.translations[0] ? verse.translations[0].text : "الترجمة غير متوفرة"}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Tafsir */}
-        {showTafsir && (
-          <div className="mt-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-            <h3 className="font-semibold text-green-800 mb-2 font-ui">التفسير</h3>
-            {verses.map((verse, index) => (
-              <div key={`tafsir-${verse.id || index}`} className="mb-4 last:mb-0">
-                <p className="text-gray-600 text-sm font-ui mb-1">{verse.verse_key}</p>
-                <p className="text-green-700 font-ui">
-                  {verse.tafsirs && verse.tafsirs[0] ? verse.tafsirs[0].text : "التفسير غير متوفر"}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const firstVerse = verses[0];
+  const isChapterStart = firstVerse?.verse_number === 1;
+  const chapterName = getChapterName(firstVerse?.chapter_id);
+  const shouldShowBasmala = isChapterStart && firstVerse?.chapter_id !== 9;
 
   return (
     <div 
-      className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200 fade-in"
+      className="max-w-4xl mx-auto"
       onClick={handlePageClick}
     >
       {/* Page Header */}
-      <div className="text-center mb-8 pb-4 border-b border-gray-200">
+      <div className="text-center my-8 pb-4 border-b border-gray-200">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
           <span className="text-gray-700 font-ui font-medium">صفحة</span>
           <span className="text-[#8b7355] font-ui font-bold text-lg">{currentPage}</span>
         </div>
-        <p className="text-sm text-gray-600 mt-2 font-ui">
-          {verses.length} آية
-        </p>
       </div>
 
-      {/* Verses Flow */}
-      <div className="mb-8">
-        {renderVersesAsFlow()}
+      {/* Chapter Header */}
+      {isChapterStart && (
+        <div className="text-center space-y-4 mb-8">
+          <div className="inline-block px-6 py-3 bg-[#8b7355] text-white rounded-lg">
+            <h2 className="text-xl font-bold font-ui">سورة {chapterName}</h2>
+          </div>
+          {shouldShowBasmala && (
+            <div className="text-center py-4">
+              <p className={`${fontFamilyClasses[arabicFont]} text-2xl text-[#8b7355] leading-loose`} dir="rtl">
+                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Verses List */}
+      <div>
+        {verses.map((verse) => (
+          <VerseDetail
+            key={verse.id}
+            verse={verse}
+            arabicFont={arabicFont}
+            playVerse={handleVerseClick}
+            isHighlighted={highlightedVerse === verse.verse_key}
+          />
+        ))}
       </div>
 
       {/* Verse Context Menu */}

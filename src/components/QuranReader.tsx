@@ -53,8 +53,6 @@ export function QuranReader() {
   const [selectedReciter, setSelectedReciter] = useState(localSettings.selectedReciter || 7); // Default to Al-Afasy
   const [selectedTafsir, setSelectedTafsir] = useState(localSettings.selectedTafsir || 167); // Default to Jalalayn
   const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131); // Default translation
-  const [showTranslation, setShowTranslation] = useState(localSettings.showTranslation || false);
-  const [showTafsir, setShowTafsir] = useState(localSettings.showTafsir || false);
   const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'light'); // إضافة حالة للثيم الحالي
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,22 +74,15 @@ export function QuranReader() {
     try {
       console.log("Loading page:", pageNumber);
       
-      // Get page data and audio in parallel using global state variables
-      const [data, audio] = await Promise.all([
-        getPageData({
-          pageNumber,
-          reciterId: selectedReciter,
-          tafsirId: selectedTafsir,
-          translationId: selectedTranslation,
-        }),
-        getPageAudio({
-          pageNumber,
-          reciterId: selectedReciter,
-        })
-      ]);
+      // Use a single, all-in-one request to get all page data
+      const data = await getPageData({
+        pageNumber,
+        reciterId: selectedReciter,
+        tafsirId: selectedTafsir,
+        translationId: selectedTranslation,
+      });
       
-      console.log("Page data loaded:", data);
-      console.log("Audio data loaded:", audio);
+      console.log("Page data loaded (all-in-one):", data);
       
       if (!data || !data.verses || data.verses.length === 0) {
         throw new Error("لا توجد آيات في هذه الصفحة");
@@ -99,11 +90,16 @@ export function QuranReader() {
       
       setPageData(data);
       
-      // The backend now provides the full URL, so no need to construct it here.
-      const audioPlaylist = (audio || []).map(item => ({
-        ...item,
-        url: item.audioUrl,
-      })).filter(item => item.url !== null);
+      // Construct the audio playlist from the verse data itself
+      const audioPlaylist = data.verses.map(verse => {
+        if (verse.audio?.url) {
+          return {
+            verseKey: verse.verse_key,
+            url: `https://verses.quran.com/${verse.audio.url}`
+          };
+        }
+        return null;
+      }).filter(item => item !== null);
 
       setAudioPlaylist(audioPlaylist);
       setCurrentPage(pageNumber);
@@ -294,8 +290,6 @@ export function QuranReader() {
         currentPage={currentPage}
         userPreferences={userPreferences}
         playVerseInMainPlayer={playVerseInMainPlayer}
-        showTranslation={showTranslation}
-        showTafsir={showTafsir}
         highlightedVerse={highlightedVerse}
       />
         </div>
@@ -333,8 +327,6 @@ export function QuranReader() {
           setSelectedReciter={setSelectedReciter}
           setSelectedTafsir={setSelectedTafsir}
           setSelectedTranslation={setSelectedTranslation}
-          setShowTranslation={setShowTranslation}
-          setShowTafsir={setShowTafsir}
         />
       )}
       

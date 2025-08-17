@@ -12,11 +12,9 @@ interface SettingsPageProps {
   setSelectedReciter: (reciterId: number) => void;
   setSelectedTafsir: (tafsirId: number) => void;
   setSelectedTranslation: (translationId: number) => void;
-  setShowTranslation: (show: boolean) => void;
-  setShowTafsir: (show: boolean) => void;
 }
 
-export function SettingsPage({ onClose, currentPage, loadPage, setSelectedReciter, setSelectedTafsir, setSelectedTranslation, setShowTranslation, setShowTafsir }: SettingsPageProps) {
+export function SettingsPage({ onClose, currentPage, loadPage, setSelectedReciter, setSelectedTafsir, setSelectedTranslation }: SettingsPageProps) {
   const [isModified, setIsModified] = useState(false);
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const updatePreferences = useMutation(api.quran.updateUserPreferences);
@@ -28,8 +26,6 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
     theme: "light",
     arabicFont: "uthmani",
     autoPlay: false,
-    showTranslation: false,
-    showTafsir: false,
   });
 
   useEffect(() => {
@@ -43,8 +39,6 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
         theme: userPreferences.theme || localSettings.theme || "light",
         arabicFont: userPreferences.arabicFont || localSettings.arabicFont || "uthmani",
         autoPlay: userPreferences.autoPlay || localSettings.autoPlay || false,
-        showTranslation: userPreferences.showTranslation || localSettings.showTranslation || false,
-        showTafsir: userPreferences.showTafsir || localSettings.showTafsir || false,
       });
     } else {
       setSettings({
@@ -54,8 +48,6 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
         theme: localSettings.theme || "light",
         arabicFont: localSettings.arabicFont || "uthmani",
         autoPlay: localSettings.autoPlay || false,
-        showTranslation: localSettings.showTranslation || false,
-        showTafsir: localSettings.showTafsir || false,
       });
 
       if (localSettings.selectedReciter) setSelectedReciter(localSettings.selectedReciter);
@@ -75,10 +67,6 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
       setSelectedTafsir(value);
     } else if (key === 'selectedTranslation') {
       setSelectedTranslation(value);
-    } else if (key === 'showTranslation') {
-      setShowTranslation(value);
-    } else if (key === 'showTafsir') {
-      setShowTafsir(value);
     } else if (key === 'theme') {
       const localSettings = JSON.parse(localStorage.getItem('quranSettings') || '{}');
       localSettings[key] = value;
@@ -276,41 +264,6 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
             </select>
           </div>
 
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700 font-ui">
-              إظهار الترجمة
-            </label>
-            <button
-              onClick={() => handleSettingChange('showTranslation', !settings.showTranslation)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.showTranslation ? 'bg-[#8b7355]' : 'bg-gray-200'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.showTranslation ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700 font-ui">
-              إظهار التفسير
-            </label>
-            <button
-              onClick={() => handleSettingChange('showTafsir', !settings.showTafsir)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.showTafsir ? 'bg-[#8b7355]' : 'bg-gray-200'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.showTafsir ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
         </div>
       </div>
     </div>

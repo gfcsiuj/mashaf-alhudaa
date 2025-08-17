@@ -101,50 +101,6 @@ export const getVerseAudio = action({
   },
 });
 
-// Get page audio playlist
-export const getPageAudio = action({
-  args: {
-    pageNumber: v.number(),
-    reciterId: v.optional(v.number())
-  },
-  handler: async (ctx, args) => {
-    const { pageNumber, reciterId = 7 } = args;
-
-    try {
-      // Get verses on this page with audio included
-      const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,audio`;
-      const versesResponse = await fetch(versesUrl);
-
-      if (!versesResponse.ok) {
-        throw new Error(`API request failed: ${versesResponse.status}`);
-      }
-
-      const versesData = await versesResponse.json();
-      
-      if (!versesData.verses || !Array.isArray(versesData.verses)) {
-        throw new Error("Invalid API response format");
-      }
-      
-      // Create audio playlist directly from verses data
-      const audioPlaylist = versesData.verses.map((verse: any) => {
-        const chapterNumber = verse.verse_key.split(':')[0];
-        
-        return {
-          verseKey: verse.verse_key,
-          audioUrl: verse.audio?.url ? `https://verses.quran.com/${verse.audio.url}` : null,
-          duration: 0, // Duration information not available
-          chapterNumber: chapterNumber
-        };
-      });
-      
-      return audioPlaylist;
-    } catch (error) {
-      console.error("Error fetching page audio:", error);
-      throw new Error("Failed to fetch page audio");
-    }
-  },
-});
-
 // Get all chapters for index
 export const getChapters = action({
   args: {},
