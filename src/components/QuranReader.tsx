@@ -55,13 +55,13 @@ export function QuranReader() {
   const [selectedTafsir, setSelectedTafsir] = useState(localSettings.selectedTafsir || 167); // Default to Jalalayn
   const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131); // Default translation
   const [fontSize, setFontSize] = useState(localSettings.fontSize || 'medium');
+  const [autoPlay, setAutoPlay] = useState(localSettings.autoPlay || false);
   const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'sepia'); // إضافة حالة للثيم الحالي
   
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Convex hooks
   const getPageData = useAction(api.quran.getPageData);
-  const getPageAudio = useAction(api.quran.getPageAudio);
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const updateProgress = useMutation(api.quran.updateReadingProgress);
   
@@ -133,22 +133,9 @@ export function QuranReader() {
     }
   };
 
-  // دالة لتشغيل آية محددة في مشغل الصوت الرئيسي
-  const playVerseInMainPlayer = (verseKey: string, audioUrl: string) => {
-    // إنشاء قائمة تشغيل جديدة تحتوي فقط على الآية المحددة
-    const singleVersePlaylist = [{
-      verseKey: verseKey,
-      url: audioUrl
-    }];
-    
-    // تحديث قائمة التشغيل الرئيسية
-    setAudioPlaylist(singleVersePlaylist);
-    setCurrentVerseAudio(audioUrl);
-    
-    // إذا كانت لوحة الصوت مفتوحة، أغلقها
-    if (activePanel === 'audio') {
-      setActivePanel(null);
-    }
+  // دالة لتشغيل قائمة تشغيل جديدة في مشغل الصوت الرئيسي
+  const playVerseInMainPlayer = (newPlaylist: any[]) => {
+    setAudioPlaylist(newPlaylist);
   };
 
   // Check for page reminders
@@ -165,13 +152,9 @@ export function QuranReader() {
 
   // تطبيق الثيم الحالي على العنصر الرئيسي
   useEffect(() => {
-    // إزالة جميع فئات الثيم السابقة
-    document.documentElement.classList.remove('theme-light', 'theme-dark', 'theme-sepia', 'theme-green');
-    
-    // إضافة فئة الثيم الحالي
-    if (currentTheme !== 'light') { // الثيم الفاتح هو الافتراضي ولا يحتاج إلى فئة
-      document.documentElement.classList.add(`theme-${currentTheme}`);
-    }
+    const root = document.documentElement;
+    root.classList.remove('theme-dark', 'theme-green', 'theme-sepia');
+    root.classList.add(`theme-${currentTheme}`);
   }, [currentTheme]);
   
   // Initialize app
@@ -225,12 +208,8 @@ export function QuranReader() {
   };
 
   // Click to toggle controls
-  const handlePageClick = (event: React.MouseEvent) => {
-    // منع انتشار الحدث لتجنب التأثير على مشغل الصوت
-    event.stopPropagation();
-    
-    // تبديل حالة عناصر التحكم فقط
-    setShowControls(!showControls);
+  const handlePageClick = () => {
+    setShowControls(prev => !prev);
   };
 
   // Navigation functions
@@ -274,6 +253,11 @@ export function QuranReader() {
         onTrackChange={setHighlightedVerse}
         layoutMode={layoutMode}
         onToggleLayout={() => setLayoutMode(prev => prev === 'list' ? 'flow' : 'list')}
+        onPlaylistEnded={() => {
+          if (autoPlay) {
+            goToNextPage();
+          }
+        }}
       />
 
       {/* Audio Player - لا نعرضه هنا بعد الآن لأننا سننقله إلى القائمة العلوية */}
@@ -335,6 +319,8 @@ export function QuranReader() {
           setSelectedTranslation={setSelectedTranslation}
           fontSize={fontSize}
           setFontSize={setFontSize}
+          autoPlay={autoPlay}
+          setAutoPlay={setAutoPlay}
         />
       )}
       

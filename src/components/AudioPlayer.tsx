@@ -13,9 +13,10 @@ interface AudioPlayerProps {
   showControls: boolean;
   isInHeader?: boolean;
   onTrackChange?: (verseKey: string) => void;
+  onPlaylistEnded?: () => void;
 }
 
-export function AudioPlayer({ playlist, showControls, isInHeader = false, onTrackChange }: AudioPlayerProps) {
+export function AudioPlayer({ playlist, showControls, isInHeader = false, onTrackChange, onPlaylistEnded }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -145,6 +146,7 @@ export function AudioPlayer({ playlist, showControls, isInHeader = false, onTrac
         if (onTrackChange) onTrackChange(playlist[0].verseKey);
       }
       toast.info("نهاية التلاوة");
+      if (onPlaylistEnded) onPlaylistEnded();
     }
   };
 

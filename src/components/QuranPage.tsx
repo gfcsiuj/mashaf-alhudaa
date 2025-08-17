@@ -25,7 +25,7 @@ interface QuranPageProps {
   isLoading: boolean;
   currentPage: number;
   userPreferences: any;
-  playVerseInMainPlayer: (verseKey: string, audioUrl:string) => void;
+  playVerseInMainPlayer: (playlist: any[]) => void;
   highlightedVerse: string | null;
   layoutMode: string;
   fontSize: string;
@@ -106,13 +106,20 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
   };
 
   const handlePlayVerse = (verse: Verse) => {
-    if (!verse.audio?.url) {
+    const verseIndex = verses.findIndex(v => v.verse_key === verse.verse_key);
+    if (verseIndex === -1) return;
+
+    const newPlaylist = verses.slice(verseIndex).map(v => ({
+      verseKey: v.verse_key,
+      url: v.audio?.url ? `https://verses.quran.com/${v.audio.url}` : null
+    })).filter(item => item.url !== null);
+
+    if (newPlaylist.length > 0) {
+      playVerseInMainPlayer(newPlaylist);
+      toast.success("بدء تشغيل التلاوة");
+    } else {
       toast.error("لا يتوفر صوت لهذه الآية");
-      return;
     }
-    const audioUrl = `https://verses.quran.com/${verse.audio.url}`;
-    playVerseInMainPlayer(verse.verse_key, audioUrl);
-    toast.success("بدء تشغيل الآية");
   };
 
   const handleCloseMenu = () => {

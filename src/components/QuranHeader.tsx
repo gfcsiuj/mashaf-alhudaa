@@ -18,9 +18,10 @@ interface QuranHeaderProps {
   onTrackChange?: (verseKey: string) => void;
   layoutMode: string;
   onToggleLayout: () => void;
+  onPlaylistEnded: () => void;
 }
 
-export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, audioPlaylist, onTrackChange, layoutMode, onToggleLayout }: QuranHeaderProps) {
+export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, audioPlaylist, onTrackChange, layoutMode, onToggleLayout, onPlaylistEnded }: QuranHeaderProps) {
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const firstVerse = verses[0];
   const chapterName = getChapterName(firstVerse?.chapter_id);
@@ -41,11 +42,11 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
           <div className="flex items-center justify-between">
           {/* Left: App Title with Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg overflow-hidden bg-white shadow-sm border border-gray-200 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white shadow-sm border border-gray-200 flex items-center justify-center">
               <img 
                 src={logoUrl} 
                 alt="مصحف الهادي" 
-                className="w-8 h-8 object-contain"
+                className="w-10 h-10 object-contain"
                 onError={(e) => {
                   // Fallback to default icon if image fails to load
                   const target = e.target as HTMLImageElement;
@@ -53,7 +54,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
                   target.nextElementSibling?.classList.remove('hidden');
                 }}
               />
-              <svg className="w-5 h-5 text-[var(--color-accent)] hidden" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-[var(--color-accent)] hidden" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
               </svg>
             </div>
@@ -148,6 +149,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
                 showControls={true} 
                 isInHeader={true}
                 onTrackChange={onTrackChange}
+                onPlaylistEnded={onPlaylistEnded}
               />
             </div>
           )}

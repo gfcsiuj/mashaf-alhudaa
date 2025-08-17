@@ -66,41 +66,6 @@ export const getPageData = action({
   },
 });
 
-// Get audio for specific verse
-export const getVerseAudio = action({
-  args: {
-    verseKey: v.string(),
-    reciterId: v.optional(v.number())
-  },
-  handler: async (ctx, args) => {
-    const { verseKey, reciterId = 7 } = args;
-
-    try {
-      // Extract chapter number from verseKey (format: chapter:verse)
-      const chapterNumber = verseKey.split(':')[0];
-      const url = `https://api.quran.foundation/content/api/v4/chapter_recitations/${reciterId}/${chapterNumber}`;
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Audio data received:", data);
-
-      // Based on the API documentation, the response should contain an audio_file object
-      if (data && data.audio_file) {
-        return { url: data.audio_file };
-      }
-
-      return { url: null };
-    } catch (error) {
-      console.error("Error fetching verse audio:", error);
-      throw new Error("Failed to fetch verse audio");
-    }
-  },
-});
-
 // Get all chapters for index
 export const getChapters = action({
   args: {},
@@ -185,7 +150,10 @@ export const searchQuran = action({
           try {
             const verseUrl = `https://api.quran.com/api/v4/verses/by_key/${result.verse_key}?fields=text_uthmani,chapter_id,verse_number,page_number`;
             const verseResponse = await fetch(verseUrl);
-            if (!verseResponse.ok) return null; // Skip if fetching details fails
+            if (!verseResponse.ok) {
+              // If fetching details fails, return the basic result
+              return { verse_key: result.verse_key, text_uthmani: result.text };
+            }
             const verseData = await verseResponse.json();
 
             return {
@@ -194,7 +162,8 @@ export const searchQuran = action({
               ...verseData.verse, // Spread the full verse details
             };
           } catch (e) {
-            return null; // Skip on error
+            // On error, return the basic result
+            return { verse_key: result.verse_key, text_uthmani: result.text };
           }
         })
       );

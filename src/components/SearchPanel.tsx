@@ -71,8 +71,12 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
   };
 
   const handleResultClick = (result: SearchResult) => {
-    onGoToPage(result.page_number);
-    toast.success(`الانتقال إلى صفحة ${result.page_number}`);
+    if (result.page_number) {
+      onGoToPage(result.page_number);
+      toast.success(`الانتقال إلى صفحة ${result.page_number}`);
+    } else {
+      toast.error("لا يمكن تحديد رقم الصفحة لهذه الآية.");
+    }
   };
 
   const highlightSearchTerm = (text: string, term: string) => {
@@ -199,12 +203,14 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
                     <div className="flex items-center gap-2">
                       <span className="text-[var(--color-accent)]">📖</span>
                       <span className="text-sm text-[var(--color-accent)] font-medium font-ui">
-                        {getChapterName(result.chapter_id)} • الآية {result.verse_number}
+                        {result.chapter_id ? `${getChapterName(result.chapter_id)} • الآية ${result.verse_number}` : result.verse_key}
                       </span>
                     </div>
-                    <span className="text-sm text-gray-500 font-ui">
-                      صفحة {result.page_number}
-                    </span>
+                    {result.page_number && (
+                      <span className="text-sm text-gray-500 font-ui">
+                        صفحة {result.page_number}
+                      </span>
+                    )}
                   </div>
                   <div 
                     className="text-gray-800 font-quran text-lg leading-relaxed group-hover:text-[var(--color-accent)] transition-colors"
