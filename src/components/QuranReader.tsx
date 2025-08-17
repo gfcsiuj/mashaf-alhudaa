@@ -259,6 +259,7 @@ export function QuranReader() {
             goToNextPage();
           }
         }}
+        autoPlay={autoPlay}
       />
 
       {/* Audio Player - لا نعرضه هنا بعد الآن لأننا سننقله إلى القائمة العلوية */}

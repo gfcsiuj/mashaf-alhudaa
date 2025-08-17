@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { toast } from "sonner";
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 
@@ -14,9 +14,10 @@ interface AudioPlayerProps {
   isInHeader?: boolean;
   onTrackChange?: (verseKey: string) => void;
   onPlaylistEnded?: () => void;
+  autoPlay?: boolean;
 }
 
-export function AudioPlayer({ playlist, showControls, isInHeader = false, onTrackChange, onPlaylistEnded }: AudioPlayerProps) {
+export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, isInHeader = false, onTrackChange, onPlaylistEnded, autoPlay = false }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -52,7 +53,7 @@ export function AudioPlayer({ playlist, showControls, isInHeader = false, onTrac
   useEffect(() => {
     if (playlist && playlist.length > 0 && audioRef.current) {
       setCurrentTrackIndex(0);
-      setIsPlaying(false);
+      setIsPlaying(autoPlay); // Set playing state based on prop
       setCurrentTime(0);
       setDuration(0);
       setHasError(false);
@@ -65,6 +66,9 @@ export function AudioPlayer({ playlist, showControls, isInHeader = false, onTrac
           }
           audioRef.current.src = audioUrl;
           audioRef.current.load();
+          if (autoPlay) {
+            audioRef.current.play().catch(e => console.error("Autoplay failed", e));
+          }
           if (onTrackChange) onTrackChange(playlist[0].verseKey);
         } catch (error) {
           setHasError(true);
@@ -240,4 +244,4 @@ export function AudioPlayer({ playlist, showControls, isInHeader = false, onTrac
       )}
     </div>
   );
-}
+});
