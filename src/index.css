@@ -8,7 +8,7 @@
 :root {
   --color-paper: #fefefe;
   --color-text: #2c2c2c;
-  --color-accent: #8b7355;
+  --color-accent: var(--color-accent);
   --color-border: #e5e5e5;
   --color-muted: #6b7280;
   --color-hover: #f8f9fa;
@@ -77,11 +77,11 @@ body {
 
 /* Auth styles */
 .auth-input-field {
-  @apply w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#8b7355] focus:ring-2 focus:ring-[#8b7355]/20 outline-none transition-all;
+  @apply w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none transition-all;
 }
 
 .auth-button {
-  @apply w-full px-4 py-3 rounded-lg bg-[#8b7355] text-white font-medium hover:bg-[#6b5b47] transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply w-full px-4 py-3 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:bg-[#6b5b47] transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 /* Verse number styling */
@@ -157,7 +157,7 @@ body {
 
 /* Focus styles */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-[#8b7355]/50 focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-2;
 }
 
 /* Loading spinner */
@@ -219,9 +219,10 @@ body {
 /* Header Audio Player Styles */
 .header-audio-player {
   width: 100%;
-  padding: 8px 16px;
-  background-color: var(--color-paper);
-  border-bottom: 1px solid var(--color-border);
+  padding: 12px;
+  background-color: var(--color-accent);
+  color: white;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -268,21 +269,25 @@ body {
   --color-text: #e5e5e5;
   --color-border: #333;
   --color-hover: #2a2a2a;
+  --color-highlight: rgba(187, 134, 252, 0.1); /* A subtle purple highlight */
 }
 
 .theme-sepia {
-  --color-paper: #f4f1e8;
-  --color-text: #5c4b37;
-  --color-border: #d4c4a8;
-  --color-hover: #ede8dc;
+  --color-paper: #fbf5e9; /* Lighter, warmer paper */
+  --color-text: #5d4037;  /* Deeper brown for better contrast */
+  --color-accent: #8d6e63; /* Softer, more muted accent */
+  --color-border: #d7ccc8; /* Softer border */
+  --color-hover: #f5efe6;  /* Warmer hover */
+  --color-highlight: rgba(141, 110, 99, 0.15); /* A subtle brown highlight */
 }
 
 .theme-green {
-  --color-paper: #f0f9f0;
-  --color-text: #1a4d1a;
-  --color-accent: #2d7d2d;
-  --color-border: #c8e6c8;
-  --color-hover: #e8f5e8;
+  --color-paper: #f1f8f1; /* A very light, soft green */
+  --color-text: #2e7d32;  /* A rich, dark green for text */
+  --color-accent: #4caf50; /* A brighter, more vibrant accent green */
+  --color-border: #c8e6c9; /* A light green border */
+  --color-hover: #e8f5e9;  /* A soft hover state */
+  --color-highlight: rgba(76, 175, 80, 0.15); /* A subtle green highlight */
 }
 
 /* Error states */
@@ -413,4 +418,52 @@ body {
 
 .tooltip:hover::after {
   opacity: 1;
+}
+
+/* New Audio Player UI Styles */
+.audio-player-ui {
+  @apply bg-[var(--color-accent)] p-3 rounded-lg shadow-lg flex items-center gap-4;
+}
+
+.audio-progress::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.audio-progress::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Active Verse Highlighting */
+.active-verse {
+  background-color: var(--color-highlight) !important;
+  color: var(--color-accent) !important;
+  border-radius: 4px;
 }

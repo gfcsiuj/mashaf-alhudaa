@@ -15,7 +15,7 @@ export const getPageData = action({
 
     try {
       // Build the API URL with proper parameters
-      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&tafsirs=${tafsirId}&translations=${translationId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
+      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?translations=${translationId}&tafsirs=${tafsirId}&audio=${reciterId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
 
       console.log("Fetching from URL:", url);
 
@@ -32,7 +32,7 @@ export const getPageData = action({
       }
 
       const data = await response.json();
-      console.log("API Response:", data);
+      console.log("RAW QURAN.COM API RESPONSE:", JSON.stringify(data, null, 2));
 
       if (!data.verses || !Array.isArray(data.verses)) {
         throw new Error("Invalid API response format");
@@ -62,85 +62,6 @@ export const getPageData = action({
     } catch (error: any) {
       console.error("Error fetching page data:", error);
       throw new Error(`Failed to fetch Quran page data: ${error?.message || 'Unknown error'}`);
-    }
-  },
-});
-
-// Get audio for specific verse
-export const getVerseAudio = action({
-  args: {
-    verseKey: v.string(),
-    reciterId: v.optional(v.number())
-  },
-  handler: async (ctx, args) => {
-    const { verseKey, reciterId = 7 } = args;
-
-    try {
-      // Extract chapter number from verseKey (format: chapter:verse)
-      const chapterNumber = verseKey.split(':')[0];
-      const url = `https://api.quran.foundation/content/api/v4/chapter_recitations/${reciterId}/${chapterNumber}`;
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Audio data received:", data);
-
-      // Based on the API documentation, the response should contain an audio_file object
-      if (data && data.audio_file) {
-        return { url: data.audio_file };
-      }
-
-      return { url: null };
-    } catch (error) {
-      console.error("Error fetching verse audio:", error);
-      throw new Error("Failed to fetch verse audio");
-    }
-  },
-});
-
-// Get page audio playlist
-export const getPageAudio = action({
-  args: {
-    pageNumber: v.number(),
-    reciterId: v.optional(v.number())
-  },
-  handler: async (ctx, args) => {
-    const { pageNumber, reciterId = 7 } = args;
-
-    try {
-      // Get verses on this page with audio included
-      const versesUrl = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,audio`;
-      const versesResponse = await fetch(versesUrl);
-
-      if (!versesResponse.ok) {
-        throw new Error(`API request failed: ${versesResponse.status}`);
-      }
-
-      const versesData = await versesResponse.json();
-      
-      if (!versesData.verses || !Array.isArray(versesData.verses)) {
-        throw new Error("Invalid API response format");
-      }
-      
-      // Create audio playlist directly from verses data
-      const audioPlaylist = versesData.verses.map((verse: any) => {
-        const chapterNumber = verse.verse_key.split(':')[0];
-        
-        return {
-          verseKey: verse.verse_key,
-          audioUrl: verse.audio?.url ? `https://verses.quran.com/${verse.audio.url}` : null,
-          duration: 0, // Duration information not available
-          chapterNumber: chapterNumber
-        };
-      });
-      
-      return audioPlaylist;
-    } catch (error) {
-      console.error("Error fetching page audio:", error);
-      throw new Error("Failed to fetch page audio");
     }
   },
 });
@@ -213,15 +134,45 @@ export const searchQuran = action({
   args: { query: v.string() },
   handler: async (ctx, args) => {
     try {
-      const url = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
-      const response = await fetch(url);
+      const searchUrl = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
+      const searchResponse = await fetch(searchUrl);
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+      if (!searchResponse.ok) {
+        throw new Error(`Search API request failed: ${searchResponse.status}`);
       }
 
-      const data = await response.json();
-      return data.search || { results: [] };
+      const searchData = await searchResponse.json();
+      const results = searchData.search?.results || [];
+
+      // Enrich search results with full verse data
+      const enrichedResults = await Promise.all(
+        results.map(async (result: any) => {
+          try {
+            const verseUrl = `https://api.quran.com/api/v4/verses/by_key/${result.verse_key}?fields=text_uthmani,chapter_id,verse_number,page_number`;
+            const verseResponse = await fetch(verseUrl);
+            if (!verseResponse.ok) {
+              // If fetching details fails, return the basic result
+              return { verse_key: result.verse_key, text_uthmani: result.text };
+            }
+            const verseData = await verseResponse.json();
+
+            return {
+              verse_key: result.verse_key,
+              text_uthmani: result.text, // Use the highlighted text from search result
+              ...verseData.verse, // Spread the full verse details
+            };
+          } catch (e) {
+            // On error, return the basic result
+            return { verse_key: result.verse_key, text_uthmani: result.text };
+          }
+        })
+      );
+
+      // Filter out any null results from failed fetches
+      const finalResults = enrichedResults.filter(r => r !== null);
+
+      return { results: finalResults };
+
     } catch (error) {
       console.error("Error searching Quran:", error);
       throw new Error("Failed to search Quran");

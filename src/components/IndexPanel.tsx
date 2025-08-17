@@ -96,7 +96,7 @@ export function IndexPanel({ onClose, onGoToPage }: IndexPanelProps) {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="ابحث عن سورة..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui"
             dir="rtl"
           />
         </div>
@@ -114,11 +114,11 @@ export function IndexPanel({ onClose, onGoToPage }: IndexPanelProps) {
                 <div
                   key={chapter.id}
                   onClick={() => handleChapterClick(chapter)}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-[#8b7355]/5 hover:border-[#8b7355] cursor-pointer transition-all group"
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-[var(--color-accent)]/5 hover:border-[var(--color-accent)] cursor-pointer transition-all group"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-[#8b7355] text-white rounded-full flex items-center justify-center font-bold font-ui">
+                      <div className="w-10 h-10 bg-[var(--color-accent)] text-white rounded-full flex items-center justify-center font-bold font-ui">
                         {chapter.id}
                       </div>
                       <div>

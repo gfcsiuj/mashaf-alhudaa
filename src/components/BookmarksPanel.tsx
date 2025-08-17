@@ -61,12 +61,12 @@ export function BookmarksPanel({ onClose, onGoToPage }: BookmarksPanelProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <svg className="w-6 h-6 text-[#8b7355]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             </svg>
             <h2 className="text-xl font-bold text-gray-800 font-ui">المفضلة</h2>
             {bookmarks && (
-              <span className="px-2 py-1 bg-[#8b7355] text-white text-sm rounded-full font-ui">
+              <span className="px-2 py-1 bg-[var(--color-accent)] text-white text-sm rounded-full font-ui">
                 {bookmarks.length}
               </span>
             )}
@@ -100,8 +100,8 @@ export function BookmarksPanel({ onClose, onGoToPage }: BookmarksPanelProps) {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-[#8b7355]">📖</span>
-                        <span className="text-sm text-[#8b7355] font-medium font-ui">
+                        <span className="text-[var(--color-accent)]">📖</span>
+                        <span className="text-sm text-[var(--color-accent)] font-medium font-ui">
                           {bookmark.verseKey} • صفحة {bookmark.pageNumber}
                         </span>
                       </div>
@@ -118,7 +118,7 @@ export function BookmarksPanel({ onClose, onGoToPage }: BookmarksPanelProps) {
                     </div>
                     
                     <div 
-                      className="text-gray-800 mb-3 font-quran text-lg leading-relaxed cursor-pointer hover:text-[#8b7355] transition-colors"
+                      className="text-gray-800 mb-3 font-quran text-lg leading-relaxed cursor-pointer hover:text-[var(--color-accent)] transition-colors"
                       dir="rtl"
                       onClick={() => handleGoToBookmark(bookmark.pageNumber)}
                       title="انقر للانتقال إلى الصفحة"
@@ -132,7 +132,7 @@ export function BookmarksPanel({ onClose, onGoToPage }: BookmarksPanelProps) {
                       </div>
                       <button
                         onClick={() => handleGoToBookmark(bookmark.pageNumber)}
-                        className="px-3 py-1 bg-[#8b7355] text-white text-sm rounded hover:bg-[#6b5b47] transition-colors font-ui"
+                        className="px-3 py-1 bg-[var(--color-accent)] text-white text-sm rounded hover:bg-[#6b5b47] transition-colors font-ui"
                       >
                         انتقال
                       </button>
