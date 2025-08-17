@@ -32,7 +32,7 @@ export const getPageData = action({
       }
 
       const data = await response.json();
-      console.log("API Response:", data);
+      console.log("RAW QURAN.COM API RESPONSE:", JSON.stringify(data, null, 2));
 
       if (!data.verses || !Array.isArray(data.verses)) {
         throw new Error("Invalid API response format");
