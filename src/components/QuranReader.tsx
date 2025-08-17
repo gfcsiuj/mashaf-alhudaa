@@ -46,7 +46,7 @@ export function QuranReader() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
-  const [layoutMode, setLayoutMode] = useState('list'); // 'list' or 'flow'
+  const [layoutMode, setLayoutMode] = useState('flow'); // 'list' or 'flow'
   
   // Global State Variables - مصدر الحقيقة الوحيد في التطبيق
   // تحميل الإعدادات من localStorage إذا كانت موجودة
@@ -54,6 +54,7 @@ export function QuranReader() {
   const [selectedReciter, setSelectedReciter] = useState(localSettings.selectedReciter || 7); // Default to Al-Afasy
   const [selectedTafsir, setSelectedTafsir] = useState(localSettings.selectedTafsir || 167); // Default to Jalalayn
   const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131); // Default translation
+  const [fontSize, setFontSize] = useState(localSettings.fontSize || 'medium');
   const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'light'); // إضافة حالة للثيم الحالي
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -295,6 +296,7 @@ export function QuranReader() {
         playVerseInMainPlayer={playVerseInMainPlayer}
         highlightedVerse={highlightedVerse}
         layoutMode={layoutMode}
+        fontSize={fontSize}
       />
         </div>
       </main>
@@ -331,6 +333,8 @@ export function QuranReader() {
           setSelectedReciter={setSelectedReciter}
           setSelectedTafsir={setSelectedTafsir}
           setSelectedTranslation={setSelectedTranslation}
+          fontSize={fontSize}
+          setFontSize={setFontSize}
         />
       )}
       

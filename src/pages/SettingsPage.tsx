@@ -12,9 +12,11 @@ interface SettingsPageProps {
   setSelectedReciter: (reciterId: number) => void;
   setSelectedTafsir: (tafsirId: number) => void;
   setSelectedTranslation: (translationId: number) => void;
+  fontSize: string;
+  setFontSize: (size: string) => void;
 }
 
-export function SettingsPage({ onClose, currentPage, loadPage, setSelectedReciter, setSelectedTafsir, setSelectedTranslation }: SettingsPageProps) {
+export function SettingsPage({ onClose, currentPage, loadPage, setSelectedReciter, setSelectedTafsir, setSelectedTranslation, fontSize, setFontSize }: SettingsPageProps) {
   const [isModified, setIsModified] = useState(false);
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const updatePreferences = useMutation(api.quran.updateUserPreferences);
@@ -26,6 +28,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
     theme: "light",
     arabicFont: "uthmani",
     autoPlay: false,
+    fontSize: "medium",
   });
 
   useEffect(() => {
@@ -39,6 +42,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
         theme: userPreferences.theme || localSettings.theme || "light",
         arabicFont: userPreferences.arabicFont || localSettings.arabicFont || "uthmani",
         autoPlay: userPreferences.autoPlay || localSettings.autoPlay || false,
+        fontSize: userPreferences.fontSize || localSettings.fontSize || "medium",
       });
     } else {
       setSettings({
@@ -48,6 +52,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
         theme: localSettings.theme || "light",
         arabicFont: localSettings.arabicFont || "uthmani",
         autoPlay: localSettings.autoPlay || false,
+        fontSize: localSettings.fontSize || "medium",
       });
 
       if (localSettings.selectedReciter) setSelectedReciter(localSettings.selectedReciter);
@@ -56,17 +61,25 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
     }
   }, [userPreferences, setSelectedReciter, setSelectedTafsir, setSelectedTranslation]);
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = async (key: string, value: any) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     setIsModified(true);
 
     if (key === 'selectedReciter') {
       setSelectedReciter(value);
+      await loadPage(currentPage);
+      toast.success("تم تغيير القارئ");
     } else if (key === 'selectedTafsir') {
       setSelectedTafsir(value);
+      await loadPage(currentPage);
+      toast.success("تم تغيير التفسير");
     } else if (key === 'selectedTranslation') {
       setSelectedTranslation(value);
+      await loadPage(currentPage);
+      toast.success("تم تغيير الترجمة");
+    } else if (key === 'fontSize') {
+      setFontSize(value);
     } else if (key === 'theme') {
       const localSettings = JSON.parse(localStorage.getItem('quranSettings') || '{}');
       localSettings[key] = value;
@@ -116,6 +129,15 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
     { id: 168, name: "تفسير ابن كثير" },
     { id: 169, name: "تفسير الطبري" },
     { id: 170, name: "تفسير القرطبي" },
+  ];
+
+  const translations = [
+    { id: 131, name: "The Clear Quran (Mustafa Khattab)" },
+    { id: 20, name: "Saheeh International" },
+    { id: 85, name: "Taqi-ud-Din al-Hilali & Muhammad Muhsin Khan" },
+    { id: 171, name: "Bengali" },
+    { id: 22, name: "French" },
+    { id: 77, name: "German" },
   ];
 
   return (
@@ -190,6 +212,21 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">
+              حجم الخط
+            </label>
+            <select
+              value={settings.fontSize}
+              onChange={(e) => handleSettingChange('fontSize', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+            >
+              <option value="small">صغير</option>
+              <option value="medium">متوسط</option>
+              <option value="large">كبير</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">
               نوع الخط العربي
             </label>
             <select
@@ -207,23 +244,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
             <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">
               المظهر
             </label>
-            <div className="grid grid-cols-4 gap-3 mt-2">
-              <button
-                onClick={() => handleSettingChange('theme', 'light')}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${settings.theme === 'light' ? 'bg-[#8b7355] text-white ring-2 ring-[#8b7355]' : 'bg-gray-100 hover:bg-gray-200'}`}
-              >
-                <Sun size={24} className="mb-1" />
-                <span className="text-xs font-ui">فاتح</span>
-              </button>
-
-              <button
-                onClick={() => handleSettingChange('theme', 'dark')}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${settings.theme === 'dark' ? 'bg-[#8b7355] text-white ring-2 ring-[#8b7355]' : 'bg-gray-100 hover:bg-gray-200'}`}
-              >
-                <Moon size={24} className="mb-1" />
-                <span className="text-xs font-ui">داكن</span>
-              </button>
-
+            <div className="grid grid-cols-2 gap-3 mt-2">
               <button
                 onClick={() => handleSettingChange('theme', 'green')}
                 className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${settings.theme === 'green' ? 'bg-[#8b7355] text-white ring-2 ring-[#8b7355]' : 'bg-gray-100 hover:bg-gray-200'}`}
@@ -259,6 +280,23 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
               {tafsirs.map((tafsir) => (
                 <option key={tafsir.id} value={tafsir.id}>
                   {tafsir.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">
+              الترجمة المفضلة
+            </label>
+            <select
+              value={settings.selectedTranslation}
+              onChange={(e) => handleSettingChange('selectedTranslation', parseInt(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+            >
+              {translations.map((translation) => (
+                <option key={translation.id} value={translation.id}>
+                  {translation.name}
                 </option>
               ))}
             </select>

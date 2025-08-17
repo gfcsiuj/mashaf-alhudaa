@@ -52,15 +52,8 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
       const data = await searchVerses({ query: searchTerm.trim() });
       console.log("Search results:", data);
       
-      // Transform the results to match our interface
-      const results = data?.results?.map((result: any) => ({
-        verse_key: result.verse_key,
-        text_uthmani: result.text,
-        page_number: result.verse?.page_number || 1,
-        chapter_id: result.verse?.chapter_id || 1,
-        verse_number: result.verse?.verse_number || 1,
-      })) || [];
-      
+      // The backend now returns enriched data, so no complex mapping is needed
+      const results = data.results || [];
       setSearchResults(results);
       
       if (!results || results.length === 0) {
@@ -127,9 +120,9 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <svg className="w-6 h-6 text-[#8b7355]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -145,7 +138,7 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
         </div>
 
         {/* Search Input */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="flex-shrink-0 p-6 border-b border-gray-200">
           <div className="relative">
             <input
               type="text"
@@ -172,7 +165,7 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
         </div>
 
         {/* Search Results */}
-        <div className="flex-1 overflow-y-auto max-h-96">
+        <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="p-8 text-center">
               <div className="w-8 h-8 spinner mx-auto mb-4"></div>

@@ -169,15 +169,41 @@ export const searchQuran = action({
   args: { query: v.string() },
   handler: async (ctx, args) => {
     try {
-      const url = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
-      const response = await fetch(url);
+      const searchUrl = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
+      const searchResponse = await fetch(searchUrl);
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+      if (!searchResponse.ok) {
+        throw new Error(`Search API request failed: ${searchResponse.status}`);
       }
 
-      const data = await response.json();
-      return data.search || { results: [] };
+      const searchData = await searchResponse.json();
+      const results = searchData.search?.results || [];
+
+      // Enrich search results with full verse data
+      const enrichedResults = await Promise.all(
+        results.map(async (result: any) => {
+          try {
+            const verseUrl = `https://api.quran.com/api/v4/verses/by_key/${result.verse_key}?fields=text_uthmani,chapter_id,verse_number,page_number`;
+            const verseResponse = await fetch(verseUrl);
+            if (!verseResponse.ok) return null; // Skip if fetching details fails
+            const verseData = await verseResponse.json();
+
+            return {
+              verse_key: result.verse_key,
+              text_uthmani: result.text, // Use the highlighted text from search result
+              ...verseData.verse, // Spread the full verse details
+            };
+          } catch (e) {
+            return null; // Skip on error
+          }
+        })
+      );
+
+      // Filter out any null results from failed fetches
+      const finalResults = enrichedResults.filter(r => r !== null);
+
+      return { results: finalResults };
+
     } catch (error) {
       console.error("Error searching Quran:", error);
       throw new Error("Failed to search Quran");

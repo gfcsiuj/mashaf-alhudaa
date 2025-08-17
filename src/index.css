@@ -271,18 +271,19 @@ body {
 }
 
 .theme-sepia {
-  --color-paper: #f4f1e8;
-  --color-text: #5c4b37;
-  --color-border: #d4c4a8;
-  --color-hover: #ede8dc;
+  --color-paper: #fbf5e9; /* Lighter, warmer paper */
+  --color-text: #5d4037;  /* Deeper brown for better contrast */
+  --color-accent: #8d6e63; /* Softer, more muted accent */
+  --color-border: #d7ccc8; /* Softer border */
+  --color-hover: #f5efe6;  /* Warmer hover */
 }
 
 .theme-green {
-  --color-paper: #f0f9f0;
-  --color-text: #1a4d1a;
-  --color-accent: #2d7d2d;
-  --color-border: #c8e6c8;
-  --color-hover: #e8f5e8;
+  --color-paper: #f1f8f1; /* A very light, soft green */
+  --color-text: #2e7d32;  /* A rich, dark green for text */
+  --color-accent: #4caf50; /* A brighter, more vibrant accent green */
+  --color-border: #c8e6c9; /* A light green border */
+  --color-hover: #e8f5e9;  /* A soft hover state */
 }
 
 /* Error states */
