@@ -2,6 +2,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { AudioPlayer } from "./AudioPlayer";
 import { useState } from "react";
+import { LayoutGrid, LayoutList } from "lucide-react";
 
 interface Verse {
   chapter_id: number;
@@ -15,9 +16,11 @@ interface QuranHeaderProps {
   onOpenPanel: (panel: string) => void;
   audioPlaylist?: any[];
   onTrackChange?: (verseKey: string) => void;
+  layoutMode: string;
+  onToggleLayout: () => void;
 }
 
-export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, audioPlaylist, onTrackChange }: QuranHeaderProps) {
+export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, audioPlaylist, onTrackChange, layoutMode, onToggleLayout }: QuranHeaderProps) {
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const firstVerse = verses[0];
   const chapterName = getChapterName(firstVerse?.chapter_id);
@@ -122,6 +125,17 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
               <svg className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4 19h6v-2H4v2zM4 15h8v-2H4v2zM4 11h8V9H4v2z" />
               </svg>
+            </button>
+            <button
+              onClick={onToggleLayout}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
+              title="تغيير طريقة العرض"
+            >
+              {layoutMode === 'list' ? (
+                <LayoutGrid className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" />
+              ) : (
+                <LayoutList className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" />
+              )}
             </button>
           </div>
           </div>

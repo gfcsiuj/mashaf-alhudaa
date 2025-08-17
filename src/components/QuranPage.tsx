@@ -25,6 +25,7 @@ interface QuranPageProps {
   userPreferences: any;
   playVerseInMainPlayer: (verseKey: string, audioUrl: string) => void;
   highlightedVerse: string | null;
+  layoutMode: string;
 }
 
 function VerseDetail({ verse, arabicFont, playVerse, isHighlighted }: { verse: Verse, arabicFont: string, playVerse: (verse: Verse) => void, isHighlighted: boolean }) {
@@ -81,7 +82,7 @@ function VerseDetail({ verse, arabicFont, playVerse, isHighlighted }: { verse: V
   );
 }
 
-export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer, highlightedVerse }: QuranPageProps) {
+export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer, highlightedVerse, layoutMode }: QuranPageProps) {
   const [selectedVerse, setSelectedVerse] = useState<string | null>(null);
   const [showVerseMenu, setShowVerseMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -324,15 +325,38 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
 
       {/* Verses List */}
       <div>
-        {verses.map((verse) => (
-          <VerseDetail
-            key={verse.id}
-            verse={verse}
-            arabicFont={arabicFont}
-            playVerse={handleVerseClick}
-            isHighlighted={highlightedVerse === verse.verse_key}
-          />
-        ))}
+        {layoutMode === 'list' ? (
+          verses.map((verse) => (
+            <VerseDetail
+              key={verse.id}
+              verse={verse}
+              arabicFont={arabicFont}
+              playVerse={handleVerseClick}
+              isHighlighted={highlightedVerse === verse.verse_key}
+            />
+          ))
+        ) : (
+          <div
+            className={`${fontFamilyClasses[arabicFont]} text-2xl leading-loose text-justify`}
+            dir="rtl"
+            style={{ textAlignLast: 'center' }}
+          >
+            {verses.map((verse, index) => (
+              <span key={verse.id || index}>
+                <span
+                  className={`cursor-pointer hover:bg-gray-50 rounded px-1 transition-colors duration-200 ${highlightedVerse === verse.verse_key ? 'active-verse' : ''}`}
+                  onClick={() => handleVerseClick(verse)}
+                >
+                  {verse.text_uthmani || "نص الآية غير متوفر"}
+                </span>
+                <span className="verse-number">
+                  {verse.verse_number}
+                </span>
+                {index < verses.length - 1 && " "}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Verse Context Menu */}

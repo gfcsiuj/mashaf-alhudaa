@@ -46,6 +46,7 @@ export function QuranReader() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
+  const [layoutMode, setLayoutMode] = useState('list'); // 'list' or 'flow'
   
   // Global State Variables - مصدر الحقيقة الوحيد في التطبيق
   // تحميل الإعدادات من localStorage إذا كانت موجودة
@@ -270,6 +271,8 @@ export function QuranReader() {
         }}
         audioPlaylist={audioPlaylist}
         onTrackChange={setHighlightedVerse}
+        layoutMode={layoutMode}
+        onToggleLayout={() => setLayoutMode(prev => prev === 'list' ? 'flow' : 'list')}
       />
 
       {/* Audio Player - لا نعرضه هنا بعد الآن لأننا سننقله إلى القائمة العلوية */}
@@ -291,6 +294,7 @@ export function QuranReader() {
         userPreferences={userPreferences}
         playVerseInMainPlayer={playVerseInMainPlayer}
         highlightedVerse={highlightedVerse}
+        layoutMode={layoutMode}
       />
         </div>
       </main>

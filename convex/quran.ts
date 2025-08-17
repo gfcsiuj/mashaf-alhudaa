@@ -15,7 +15,7 @@ export const getPageData = action({
 
     try {
       // Build the API URL with proper parameters
-      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?audio=${reciterId}&tafsirs=${tafsirId}&translations=${translationId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
+      const url = `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?translations=${translationId}&tafsirs=${tafsirId}&audio=${reciterId}&words=false&fields=text_uthmani,chapter_id,verse_number,verse_key,juz_number,hizb_number,rub_number,page_number`;
 
       console.log("Fetching from URL:", url);
 
