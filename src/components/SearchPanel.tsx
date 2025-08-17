@@ -76,6 +76,7 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
   };
 
   const highlightSearchTerm = (text: string, term: string) => {
+    if (!text) return ""; // Guard against undefined text
     if (!term.trim()) return text;
     
     const regex = new RegExp(`(${term.trim()})`, 'gi');
@@ -124,7 +125,7 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <svg className="w-6 h-6 text-[#8b7355]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <h2 className="text-xl font-bold text-gray-800 font-ui">البحث في القرآن</h2>
@@ -145,7 +146,7 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="ابحث في القرآن الكريم..."
-              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui text-lg"
+              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui text-lg"
               dir="rtl"
               autoFocus
             />
@@ -192,12 +193,12 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
                 <div
                   key={`${result.verse_key}-${index}`}
                   onClick={() => handleResultClick(result)}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-[#8b7355]/5 hover:border-[#8b7355] cursor-pointer transition-all group"
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-[var(--color-accent)]/5 hover:border-[var(--color-accent)] cursor-pointer transition-all group"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#8b7355]">📖</span>
-                      <span className="text-sm text-[#8b7355] font-medium font-ui">
+                      <span className="text-[var(--color-accent)]">📖</span>
+                      <span className="text-sm text-[var(--color-accent)] font-medium font-ui">
                         {getChapterName(result.chapter_id)} • الآية {result.verse_number}
                       </span>
                     </div>
@@ -206,7 +207,7 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
                     </span>
                   </div>
                   <div 
-                    className="text-gray-800 font-quran text-lg leading-relaxed group-hover:text-[#8b7355] transition-colors"
+                    className="text-gray-800 font-quran text-lg leading-relaxed group-hover:text-[var(--color-accent)] transition-colors"
                     dir="rtl"
                   >
                     {highlightSearchTerm(result.text_uthmani, searchTerm)}

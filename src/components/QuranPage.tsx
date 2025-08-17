@@ -182,7 +182,7 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
       <div className="text-center my-8 pb-4 border-b border-gray-200">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
           <span className="text-gray-700 font-ui font-medium">صفحة</span>
-          <span className="text-[#8b7355] font-ui font-bold text-lg">{currentPage}</span>
+          <span className="text-[var(--color-accent)] font-ui font-bold text-lg">{currentPage}</span>
         </div>
       </div>
 
@@ -195,7 +195,7 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
           </div>
           {shouldShowBasmala && (
             <div className="text-center py-6 mt-4">
-              <p className="font-quran text-4xl text-[#8b7355] leading-loose">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+              <p className="font-quran text-4xl text-[var(--color-accent)] leading-loose">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
             </div>
           )}
         </div>

@@ -53,7 +53,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
                   target.nextElementSibling?.classList.remove('hidden');
                 }}
               />
-              <svg className="w-5 h-5 text-[#8b7355] hidden" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-[var(--color-accent)] hidden" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
               </svg>
             </div>
@@ -73,7 +73,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
             {juzNumber && (
               <span className="hidden md:inline">الجزء {juzNumber}</span>
             )}
-            <span className="px-3 py-1 bg-[#8b7355] text-white rounded-full font-medium">
+            <span className="px-3 py-1 bg-[var(--color-accent)] text-white rounded-full font-medium">
               صفحة {currentPage}
             </span>
           </div>
@@ -85,7 +85,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
               title="البحث"
             >
-              <svg className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 group-hover:text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
@@ -94,7 +94,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
               title="الفهرس"
             >
-              <svg className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 group-hover:text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
               </svg>
             </button>
@@ -103,7 +103,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
               title="المفضلة"
             >
-              <svg className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 group-hover:text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
             </button>
@@ -112,7 +112,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
               title="الإعدادات"
             >
-              <svg className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 group-hover:text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
@@ -122,7 +122,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
               title="التذكيرات"
             >
-              <svg className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 group-hover:text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4 19h6v-2H4v2zM4 15h8v-2H4v2zM4 11h8V9H4v2z" />
               </svg>
             </button>
@@ -132,9 +132,9 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
               title="تغيير طريقة العرض"
             >
               {layoutMode === 'list' ? (
-                <LayoutGrid className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" />
+                <LayoutGrid className="w-5 h-5 text-gray-600 group-hover:text-[var(--color-accent)]" />
               ) : (
-                <LayoutList className="w-5 h-5 text-gray-600 group-hover:text-[#8b7355]" />
+                <LayoutList className="w-5 h-5 text-gray-600 group-hover:text-[var(--color-accent)]" />
               )}
             </button>
           </div>

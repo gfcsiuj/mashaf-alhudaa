@@ -25,7 +25,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
     selectedReciter: 7,
     selectedTafsir: 167,
     selectedTranslation: 131,
-    theme: "light",
+    theme: "sepia",
     arabicFont: "uthmani",
     autoPlay: false,
     fontSize: "medium",
@@ -149,7 +149,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
           <button
             onClick={saveAllSettings}
             disabled={!isModified}
-            className={`p-2 rounded-lg transition-colors flex items-center gap-1 ${isModified ? 'bg-[#8b7355] text-white hover:bg-[#7a6548]' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+            className={`p-2 rounded-lg transition-colors flex items-center gap-1 ${isModified ? 'bg-[var(--color-accent)] text-white hover:bg-[#7a6548]' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
           >
             <Save size={20} />
             <span className="font-ui text-sm">حفظ</span>
@@ -177,7 +177,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
             <select
               value={settings.selectedReciter}
               onChange={(e) => handleSettingChange('selectedReciter', parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui"
             >
               {reciters.map((reciter) => (
                 <option key={reciter.id} value={reciter.id}>
@@ -194,7 +194,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
             <button
               onClick={() => handleSettingChange('autoPlay', !settings.autoPlay)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.autoPlay ? 'bg-[#8b7355]' : 'bg-gray-200'
+                settings.autoPlay ? 'bg-[var(--color-accent)]' : 'bg-gray-200'
               }`}
             >
               <span
@@ -217,7 +217,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
             <select
               value={settings.fontSize}
               onChange={(e) => handleSettingChange('fontSize', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui"
             >
               <option value="small">صغير</option>
               <option value="medium">متوسط</option>
@@ -232,7 +232,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
             <select
               value={settings.arabicFont}
               onChange={(e) => handleSettingChange('arabicFont', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui"
             >
               <option value="uthmani">الخط العثماني</option>
               <option value="indopak">الخط الهندي</option>
@@ -244,10 +244,18 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
             <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">
               المظهر
             </label>
-            <div className="grid grid-cols-2 gap-3 mt-2">
+            <div className="grid grid-cols-3 gap-3 mt-2">
+              <button
+                onClick={() => handleSettingChange('theme', 'dark')}
+                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${settings.theme === 'dark' ? 'bg-[var(--color-accent)] text-white ring-2 ring-[var(--color-accent)]' : 'bg-gray-100 hover:bg-gray-200'}`}
+              >
+                <Moon size={24} className="mb-1" />
+                <span className="text-xs font-ui">داكن</span>
+              </button>
+
               <button
                 onClick={() => handleSettingChange('theme', 'green')}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${settings.theme === 'green' ? 'bg-[#8b7355] text-white ring-2 ring-[#8b7355]' : 'bg-gray-100 hover:bg-gray-200'}`}
+                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${settings.theme === 'green' ? 'bg-[var(--color-accent)] text-white ring-2 ring-[var(--color-accent)]' : 'bg-gray-100 hover:bg-gray-200'}`}
               >
                 <Leaf size={24} className="mb-1" />
                 <span className="text-xs font-ui">أخضر</span>
@@ -255,7 +263,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
 
               <button
                 onClick={() => handleSettingChange('theme', 'sepia')}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${settings.theme === 'sepia' ? 'bg-[#8b7355] text-white ring-2 ring-[#8b7355]' : 'bg-gray-100 hover:bg-gray-200'}`}
+                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${settings.theme === 'sepia' ? 'bg-[var(--color-accent)] text-white ring-2 ring-[var(--color-accent)]' : 'bg-gray-100 hover:bg-gray-200'}`}
               >
                 <BookOpen size={24} className="mb-1" />
                 <span className="text-xs font-ui">بني فاتح</span>
@@ -275,7 +283,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
             <select
               value={settings.selectedTafsir}
               onChange={(e) => handleSettingChange('selectedTafsir', parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui"
             >
               {tafsirs.map((tafsir) => (
                 <option key={tafsir.id} value={tafsir.id}>
@@ -292,7 +300,7 @@ export function SettingsPage({ onClose, currentPage, loadPage, setSelectedRecite
             <select
               value={settings.selectedTranslation}
               onChange={(e) => handleSettingChange('selectedTranslation', parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui"
             >
               {translations.map((translation) => (
                 <option key={translation.id} value={translation.id}>

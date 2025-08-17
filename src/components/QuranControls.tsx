@@ -44,7 +44,7 @@ export function QuranControls({
           <button
             onClick={onPrevPage}
             disabled={currentPage <= 1}
-            className="flex items-center gap-2 px-4 py-2 bg-[#8b7355] text-white rounded-lg hover:bg-[#6b5b47] disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-hover font-ui"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[#6b5b47] disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-hover font-ui"
             title="الصفحة السابقة"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@ export function QuranControls({
                   type="text"
                   value={pageInput}
                   onChange={handlePageInputChange}
-                  className="w-16 px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+                  className="w-16 px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui"
                   placeholder="1-604"
                   autoFocus
                   onBlur={() => {
@@ -78,7 +78,7 @@ export function QuranControls({
                 title="انتقال إلى صفحة"
               >
                 <span className="text-sm text-gray-600">صفحة</span>
-                <span className="font-bold text-[#8b7355]">{currentPage}</span>
+                <span className="font-bold text-[var(--color-accent)]">{currentPage}</span>
                 <span className="text-sm text-gray-600">من 604</span>
               </button>
             )}
@@ -87,7 +87,7 @@ export function QuranControls({
             <div className="hidden md:flex items-center gap-2">
               <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-[#8b7355] rounded-full transition-all duration-300"
+                  className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300"
                   style={{ width: `${(currentPage / 604) * 100}%` }}
                 />
               </div>
@@ -101,7 +101,7 @@ export function QuranControls({
           <button
             onClick={onNextPage}
             disabled={currentPage >= 604}
-            className="flex items-center gap-2 px-4 py-2 bg-[#8b7355] text-white rounded-lg hover:bg-[#6b5b47] disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-hover font-ui"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[#6b5b47] disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-hover font-ui"
             title="الصفحة التالية"
           >
             <span className="hidden sm:inline">التالية</span>
@@ -116,7 +116,7 @@ export function QuranControls({
           <div className="flex items-center gap-2">
             <div className="w-24 h-1 bg-gray-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-[#8b7355] rounded-full transition-all duration-300"
+                className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300"
                 style={{ width: `${(currentPage / 604) * 100}%` }}
               />
             </div>

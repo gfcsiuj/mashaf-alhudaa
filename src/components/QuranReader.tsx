@@ -55,7 +55,7 @@ export function QuranReader() {
   const [selectedTafsir, setSelectedTafsir] = useState(localSettings.selectedTafsir || 167); // Default to Jalalayn
   const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131); // Default translation
   const [fontSize, setFontSize] = useState(localSettings.fontSize || 'medium');
-  const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'light'); // إضافة حالة للثيم الحالي
+  const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'sepia'); // إضافة حالة للثيم الحالي
   
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -394,7 +394,7 @@ function CompletionPanel({ onClose, onRestart }: { onClose: () => void; onRestar
           <div className="flex gap-4 justify-center">
             <button
               onClick={onRestart}
-              className="px-6 py-3 bg-[#8b7355] text-white rounded-lg hover:bg-[#6b5b47] transition-colors font-ui"
+              className="px-6 py-3 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[#6b5b47] transition-colors font-ui"
             >
               ابدأ من جديد
             </button>

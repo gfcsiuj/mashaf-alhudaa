@@ -84,7 +84,7 @@ export function RemindersPanel({ onClose, currentPage }: RemindersPanelProps) {
                   max="604"
                   value={selectedPage}
                   onChange={(e) => setSelectedPage(parseInt(e.target.value) || 1)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui"
                 />
               </div>
             </div>
@@ -96,7 +96,7 @@ export function RemindersPanel({ onClose, currentPage }: RemindersPanelProps) {
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
                 placeholder="اكتب تذكيرك هنا..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8b7355] focus:border-[#8b7355] outline-none font-ui"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui"
                 rows={3}
                 dir="rtl"
               />
@@ -104,7 +104,7 @@ export function RemindersPanel({ onClose, currentPage }: RemindersPanelProps) {
             <button
               type="submit"
               disabled={!newNote.trim()}
-              className="w-full px-4 py-2 bg-[#8b7355] text-white rounded-lg hover:bg-[#6b5b47] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-ui"
+              className="w-full px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[#6b5b47] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-ui"
             >
               إضافة التذكير
             </button>
@@ -127,8 +127,8 @@ export function RemindersPanel({ onClose, currentPage }: RemindersPanelProps) {
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-[#8b7355]">📌</span>
-                        <span className="text-sm text-[#8b7355] font-medium font-ui">
+                        <span className="text-[var(--color-accent)]">📌</span>
+                        <span className="text-sm text-[var(--color-accent)] font-medium font-ui">
                           صفحة {reminder.pageNumber}
                         </span>
                       </div>

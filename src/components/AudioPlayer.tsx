@@ -210,7 +210,7 @@ export function AudioPlayer({ playlist, showControls, isInHeader = false, onTrac
             <button onClick={prevTrack} disabled={currentTrackIndex <= 0} className="p-2 rounded-full hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               <SkipBack size={20} />
             </button>
-            <button onClick={togglePlayPause} className="p-3 bg-white text-[#8b7355] rounded-full hover:bg-gray-200 transition-transform transform active:scale-95">
+            <button onClick={togglePlayPause} className="p-3 bg-white text-[var(--color-accent)] rounded-full hover:bg-gray-200 transition-transform transform active:scale-95">
               {isPlaying ? <Pause size={24} /> : <Play size={24} />}
             </button>
             <button onClick={playNextTrack} disabled={currentTrackIndex >= playlist.length - 1} className="p-2 rounded-full hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">

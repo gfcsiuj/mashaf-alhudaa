@@ -8,7 +8,7 @@
 :root {
   --color-paper: #fefefe;
   --color-text: #2c2c2c;
-  --color-accent: #8b7355;
+  --color-accent: var(--color-accent);
   --color-border: #e5e5e5;
   --color-muted: #6b7280;
   --color-hover: #f8f9fa;
@@ -77,11 +77,11 @@ body {
 
 /* Auth styles */
 .auth-input-field {
-  @apply w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#8b7355] focus:ring-2 focus:ring-[#8b7355]/20 outline-none transition-all;
+  @apply w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 outline-none transition-all;
 }
 
 .auth-button {
-  @apply w-full px-4 py-3 rounded-lg bg-[#8b7355] text-white font-medium hover:bg-[#6b5b47] transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply w-full px-4 py-3 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:bg-[#6b5b47] transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 /* Verse number styling */
@@ -157,7 +157,7 @@ body {
 
 /* Focus styles */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-[#8b7355]/50 focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:ring-offset-2;
 }
 
 /* Loading spinner */
@@ -219,9 +219,10 @@ body {
 /* Header Audio Player Styles */
 .header-audio-player {
   width: 100%;
-  padding: 8px 16px;
-  background-color: var(--color-paper);
-  border-bottom: 1px solid var(--color-border);
+  padding: 12px;
+  background-color: var(--color-accent);
+  color: white;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -284,6 +285,14 @@ body {
   --color-accent: #4caf50; /* A brighter, more vibrant accent green */
   --color-border: #c8e6c9; /* A light green border */
   --color-hover: #e8f5e9;  /* A soft hover state */
+}
+
+.theme-dark {
+  --color-paper: #121212;
+  --color-text: #e0e0e0;
+  --color-accent: #bb86fc;
+  --color-border: #333333;
+  --color-hover: #1e1e1e;
 }
 
 /* Error states */
@@ -418,7 +427,7 @@ body {
 
 /* New Audio Player UI Styles */
 .audio-player-ui {
-  @apply bg-[#8b7355] p-3 rounded-lg shadow-lg flex items-center gap-4;
+  @apply bg-[var(--color-accent)] p-3 rounded-lg shadow-lg flex items-center gap-4;
 }
 
 .audio-progress::-webkit-slider-thumb {
@@ -460,6 +469,6 @@ body {
 /* Active Verse Highlighting */
 .active-verse {
   background-color: rgba(239, 213, 179, 0.5) !important; /* A light, warm highlight */
-  color: #8b7355 !important;
+  color: var(--color-accent) !important;
   border-radius: 4px;
 }
