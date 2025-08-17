@@ -56,6 +56,7 @@ export function QuranReader() {
   const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131); // Default translation
   const [fontSize, setFontSize] = useState(localSettings.fontSize || 'medium');
   const [autoPlay, setAutoPlay] = useState(localSettings.autoPlay || false);
+  const [arabicFont, setArabicFont] = useState(localSettings.arabicFont || 'uthmani');
   const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'sepia'); // إضافة حالة للثيم الحالي
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -281,6 +282,7 @@ export function QuranReader() {
         highlightedVerse={highlightedVerse}
         layoutMode={layoutMode}
         fontSize={fontSize}
+        arabicFont={arabicFont}
       />
         </div>
       </main>
@@ -312,15 +314,23 @@ export function QuranReader() {
       {showSettingsPage && (
         <SettingsPage
           onClose={() => setShowSettingsPage(false)}
-          currentPage={currentPage}
-          loadPage={loadPage}
+          loadPage={() => loadPage(currentPage)}
+          // Pass state values
+          selectedReciter={selectedReciter}
+          selectedTafsir={selectedTafsir}
+          selectedTranslation={selectedTranslation}
+          fontSize={fontSize}
+          autoPlay={autoPlay}
+          currentTheme={currentTheme}
+          arabicFont={arabicFont}
+          // Pass state setters
           setSelectedReciter={setSelectedReciter}
           setSelectedTafsir={setSelectedTafsir}
           setSelectedTranslation={setSelectedTranslation}
-          fontSize={fontSize}
           setFontSize={setFontSize}
-          autoPlay={autoPlay}
           setAutoPlay={setAutoPlay}
+          setCurrentTheme={setCurrentTheme}
+          setArabicFont={setArabicFont}
         />
       )}
       

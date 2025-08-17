@@ -29,6 +29,7 @@ interface QuranPageProps {
   highlightedVerse: string | null;
   layoutMode: string;
   fontSize: string;
+  arabicFont: string;
 }
 
 function VerseDetail({
@@ -84,7 +85,7 @@ function VerseDetail({
   );
 }
 
-export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer, highlightedVerse, layoutMode, fontSize }: QuranPageProps) {
+export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer, highlightedVerse, layoutMode, fontSize, arabicFont }: QuranPageProps) {
   const [menuState, setMenuState] = useState<{
     visible: boolean;
     verse: Verse | null;
@@ -176,7 +177,6 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
     return <div className="flex items-center justify-center min-h-[60vh]"><p>لا توجد آيات في هذه الصفحة</p></div>;
   }
 
-  const arabicFont = userPreferences?.arabicFont || 'uthmani';
   const fontFamilyClasses: Record<string, string> = { uthmani: 'font-quran', indopak: 'font-indopak', qpc: 'font-qpc' };
   const fontSizeClasses: Record<string, string> = { small: 'text-xl', medium: 'text-2xl', large: 'text-3xl' };
   const firstVerse = verses[0];
