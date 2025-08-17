@@ -60,7 +60,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
             </div>
             <div>
               <h1 className="text-lg font-semibold text-gray-800 font-ui">
-                مصحف الهادي
+                مصحف الهادي - نسخة تجريبية
               </h1>
               <p className="text-xs text-gray-500 font-ui">القرآن الكريم</p>
             </div>
