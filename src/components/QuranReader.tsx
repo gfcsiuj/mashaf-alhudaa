@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAction, useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
@@ -53,7 +53,7 @@ export function QuranReader() {
   const [selectedTafsir, setSelectedTafsir] = useState(localSettings.selectedTafsir || 167);
   const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131);
   const [fontSize, setFontSize] = useState(localSettings.fontSize || 'medium');
-  const [autoPlay, setAutoPlay] = useState(localSettings.autoPlay || false);
+  const [autoPlay, setAutoPlay] = useState(localSettings.autoPlay ?? true);
   const [arabicFont, setArabicFont] = useState(localSettings.arabicFont || 'uthmani');
   const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'sepia');
 
@@ -192,6 +192,10 @@ export function QuranReader() {
     }
   }, [currentPage]);
 
+  const onPlaybackStarted = useCallback(() => {
+    setForcePlay(false);
+  }, []);
+
   return (
     <div className="min-h-screen bg-main relative">
       <QuranHeader
@@ -216,14 +220,10 @@ export function QuranReader() {
             showControls={true}
             isInHeader={true}
             onTrackChange={setHighlightedVerse}
-            onPlaylistEnded={() => {
-              if (autoPlay) {
-                goToNextPage();
-              }
-            }}
+            onPlaylistEnded={goToNextPage}
             autoPlay={autoPlay}
             startPlaying={forcePlay}
-            onPlaybackStarted={() => setForcePlay(false)}
+            onPlaybackStarted={onPlaybackStarted}
           />
         </div>
       )}
