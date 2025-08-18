@@ -47,6 +47,7 @@ export function QuranReader() {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   const [layoutMode, setLayoutMode] = useState('flow'); // 'list' or 'flow'
+  const [forcePlay, setForcePlay] = useState(false); // New state to control playback intent
   
   // Global State Variables - مصدر الحقيقة الوحيد في التطبيق
   // تحميل الإعدادات من localStorage إذا كانت موجودة
@@ -137,6 +138,7 @@ export function QuranReader() {
   // دالة لتشغيل قائمة تشغيل جديدة في مشغل الصوت الرئيسي
   const playVerseInMainPlayer = (newPlaylist: any[]) => {
     setAudioPlaylist(newPlaylist);
+    setForcePlay(true); // Explicitly tell the player to start
   };
 
   // Check for page reminders
@@ -182,6 +184,14 @@ export function QuranReader() {
       loadPage(currentPage);
     }
   }, [userPreferences?.selectedReciter, userPreferences?.selectedTafsir]);
+
+  // Reset forcePlay after it has been used
+  useEffect(() => {
+    if (forcePlay) {
+      const timer = setTimeout(() => setForcePlay(false), 100); // Reset after a short delay
+      return () => clearTimeout(timer);
+    }
+  }, [forcePlay]);
 
   // Touch handlers for swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -268,6 +278,7 @@ export function QuranReader() {
               }
             }}
             autoPlay={autoPlay}
+            startPlaying={forcePlay}
           />
         </div>
       )}

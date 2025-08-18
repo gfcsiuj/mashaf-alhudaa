@@ -15,9 +15,10 @@ interface AudioPlayerProps {
   onTrackChange?: (verseKey: string) => void;
   onPlaylistEnded?: () => void;
   autoPlay?: boolean;
+  startPlaying?: boolean;
 }
 
-export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, isInHeader = false, onTrackChange, onPlaylistEnded, autoPlay = false }: AudioPlayerProps) {
+export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, isInHeader = false, onTrackChange, onPlaylistEnded, autoPlay = false, startPlaying = false }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -53,7 +54,7 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
   useEffect(() => {
     if (playlist && playlist.length > 0 && audioRef.current) {
       setCurrentTrackIndex(0);
-      setIsPlaying(true); // Always start playing on new playlist
+      setIsPlaying(startPlaying); // Set playing state based on prop
       setCurrentTime(0);
       setDuration(0);
       setHasError(false);
@@ -67,10 +68,12 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
           }
           audioRef.current.src = audioUrl;
           audioRef.current.load();
-          audioRef.current.play().catch(e => {
-            console.error("Play failed", e);
-            setIsPlaying(false);
-          });
+          if (startPlaying) {
+            audioRef.current.play().catch(e => {
+              console.error("Play failed", e);
+              setIsPlaying(false);
+            });
+          }
           if (onTrackChange) onTrackChange(playlist[0].verseKey);
         } catch (error) {
           setHasError(true);
@@ -90,7 +93,7 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
         activeAudioPlayers = activeAudioPlayers.filter(player => player !== audioRef.current);
       }
     };
-  }, [playlist, onTrackChange]);
+  }, [playlist, onTrackChange, startPlaying]);
 
   const togglePlayPause = () => {
     if (!audioRef.current || playlist.length === 0) {
