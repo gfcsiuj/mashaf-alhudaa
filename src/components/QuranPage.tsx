@@ -60,9 +60,9 @@ function VerseDetail({
   const fontSizeClasses: Record<string, string> = { small: 'text-xl', medium: 'text-2xl', large: 'text-3xl' };
 
   return (
-    <div className={`verse-container mb-4 p-4 rounded-lg border bg-white shadow-sm transition-colors ${isHighlighted ? 'active-verse' : 'border-gray-100'}`}>
+    <div className={`verse-container mb-4 p-4 rounded-lg border bg-main shadow-sm transition-colors ${isHighlighted ? 'active-verse' : 'border-main'}`}>
       <p
-        className={`${fontFamilyClasses[arabicFont]} ${fontSizeClasses[fontSize]} leading-loose text-justify cursor-pointer`}
+        className={`${fontFamilyClasses[arabicFont]} ${fontSizeClasses[fontSize]} leading-loose text-justify cursor-pointer text-main`}
         onClick={(e) => onVerseClick(verse, e)}
       >
         {verse.text_uthmani}
@@ -70,15 +70,15 @@ function VerseDetail({
       </p>
 
       {showTafsir && (
-        <div className="mt-4 p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
-          <h3 className="font-bold text-green-800 mb-2 font-ui">التفسير</h3>
-          <p className="text-green-700 font-ui">{tafsirText}</p>
+        <div className="mt-4 p-3 bg-green-500/10 rounded-lg border-l-4 border-green-500/50">
+          <h3 className="font-bold text-green-700 dark:text-green-300 mb-2 font-ui">التفسير</h3>
+          <p className="text-green-800 dark:text-green-200 font-ui">{tafsirText}</p>
         </div>
       )}
       {showTranslation && (
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-          <h3 className="font-bold text-blue-800 mb-2 font-ui">الترجمة</h3>
-          <p className="text-blue-700 font-ui">{translationText}</p>
+        <div className="mt-4 p-3 bg-blue-500/10 rounded-lg border-l-4 border-blue-500/50">
+          <h3 className="font-bold text-blue-700 dark:text-blue-300 mb-2 font-ui">الترجمة</h3>
+          <p className="text-blue-800 dark:text-blue-200 font-ui">{translationText}</p>
         </div>
       )}
     </div>
@@ -186,23 +186,23 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
 
   return (
     <div className="max-w-4xl mx-auto" onClick={handleCloseMenu}>
-      <div className="text-center my-8 pb-4 border-b border-gray-200">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
-          <span className="text-gray-700 font-ui font-medium">صفحة</span>
-          <span className="text-[var(--color-accent)] font-ui font-bold text-lg">{currentPage}</span>
+      <div className="text-center my-8 pb-4 border-b border-main">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-hover rounded-full">
+          <span className="text-muted font-ui font-medium">صفحة</span>
+          <span className="text-accent font-ui font-bold text-lg">{currentPage}</span>
         </div>
       </div>
 
       {isChapterStart && (
         <div className="w-full my-8">
           <div className="flex items-center justify-center">
-            <div className="px-8 py-4 bg-gray-100 border-2 border-gray-200 rounded-lg shadow-md">
-              <h2 className="text-3xl font-bold font-quran text-gray-700">سورة {chapterName}</h2>
+            <div className="px-8 py-4 bg-hover border-2 border-main rounded-lg shadow-md">
+              <h2 className="text-3xl font-bold font-quran text-main">سورة {chapterName}</h2>
             </div>
           </div>
           {shouldShowBasmala && (
             <div className="text-center py-6 mt-4">
-              <p className="font-quran text-4xl text-[var(--color-accent)] leading-loose">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+              <p className="font-quran text-4xl text-accent leading-loose">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
             </div>
           )}
         </div>
@@ -223,9 +223,9 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
             />
           ))
         ) : (
-          <div className={`${fontFamilyClasses[arabicFont]} text-2xl leading-loose text-justify`} dir="rtl" style={{ textAlignLast: 'center' }}>
+          <div className={`${fontFamilyClasses[arabicFont]} text-2xl leading-loose text-justify text-main`} dir="rtl" style={{ textAlignLast: 'center' }}>
             {verses.map((verse, index) => (
-              <span key={verse.id || index} className={`cursor-pointer hover:bg-gray-50 rounded px-1 transition-colors duration-200 ${highlightedVerse === verse.verse_key ? 'active-verse' : ''}`} onClick={(e) => handleVerseClick(verse, e)}>
+              <span key={verse.id || index} className={`cursor-pointer bg-hover rounded px-1 transition-colors duration-200 ${highlightedVerse === verse.verse_key ? 'active-verse' : ''}`} onClick={(e) => handleVerseClick(verse, e)}>
                 {verse.text_uthmani || "نص الآية غير متوفر"}
                 <span className="verse-number">{verse.verse_number}</span>
                 {index < verses.length - 1 && " "}
@@ -237,17 +237,17 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
 
       {menuState.visible && menuState.verse && (
         <div
-          className="fixed bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 slide-up flex flex-col"
+          className="fixed bg-main rounded-lg shadow-xl border border-main py-2 z-50 slide-up flex flex-col"
           style={{
             left: Math.min(menuState.position.x, window.innerWidth - 200),
             top: Math.min(menuState.position.y, window.innerHeight - 250),
           }}
         >
-          <button onClick={() => handleMenuAction('listen')} className="w-full px-4 py-2 text-right hover:bg-gray-50 flex items-center gap-3 transition-colors font-ui"><Play size={16} /><span>استماع للآية</span></button>
-          <button onClick={() => handleMenuAction('bookmark')} className="w-full px-4 py-2 text-right hover:bg-gray-50 flex items-center gap-3 transition-colors font-ui"><Bookmark size={16} /><span>إضافة للمفضلة</span></button>
-          <button onClick={() => handleMenuAction('share')} className="w-full px-4 py-2 text-right hover:bg-gray-50 flex items-center gap-3 transition-colors font-ui"><Share2 size={16} /><span>مشاركة الآية</span></button>
-          <button onClick={() => handleMenuAction('tafsir')} className="w-full px-4 py-2 text-right hover:bg-gray-50 flex items-center gap-3 transition-colors font-ui"><BookOpen size={16} /><span>عرض التفسير</span></button>
-          <button onClick={() => handleMenuAction('translation')} className="w-full px-4 py-2 text-right hover:bg-gray-50 flex items-center gap-3 transition-colors font-ui"><FileText size={16} /><span>عرض الترجمة</span></button>
+          <button onClick={() => handleMenuAction('listen')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><Play size={16} /><span>استماع للآية</span></button>
+          <button onClick={() => handleMenuAction('bookmark')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><Bookmark size={16} /><span>إضافة للمفضلة</span></button>
+          <button onClick={() => handleMenuAction('share')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><Share2 size={16} /><span>مشاركة الآية</span></button>
+          <button onClick={() => handleMenuAction('tafsir')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><BookOpen size={16} /><span>عرض التفسير</span></button>
+          <button onClick={() => handleMenuAction('translation')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><FileText size={16} /><span>عرض الترجمة</span></button>
         </div>
       )}
     </div>
