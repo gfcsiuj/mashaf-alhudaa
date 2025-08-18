@@ -222,8 +222,13 @@ export function QuranReader() {
     if (currentPage > 1) loadPage(currentPage - 1);
   };
 
-  const goToPage = (pageNumber: number) => {
+  const goToPage = (pageNumber: number, verseToHighlight?: string) => {
     loadPage(pageNumber);
+    if (verseToHighlight) {
+      setHighlightedVerse(verseToHighlight);
+      // Optional: clear highlight after a delay
+      setTimeout(() => setHighlightedVerse(null), 5000);
+    }
     setActivePanel(null);
   };
 
@@ -358,6 +363,22 @@ export function QuranReader() {
             goToPage(1);
           }}
         />
+      )}
+
+      {/* Global Audio Player */}
+      {audioPlaylist && audioPlaylist.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-transparent">
+          <AudioPlayer
+            playlist={audioPlaylist}
+            showControls={true}
+            onTrackChange={setHighlightedVerse}
+            onPlaylistEnded={() => {
+              if (autoPlay) {
+                goToNextPage();
+              }
+            }}
+          />
+        </div>
       )}
     </div>
   );

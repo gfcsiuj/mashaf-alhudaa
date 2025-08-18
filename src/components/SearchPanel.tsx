@@ -13,7 +13,7 @@ interface SearchResult {
 
 interface SearchPanelProps {
   onClose: () => void;
-  onGoToPage: (page: number) => void;
+  onGoToPage: (page: number, verseKey?: string) => void;
 }
 
 export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
@@ -72,7 +72,7 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
 
   const handleResultClick = (result: SearchResult) => {
     if (result.page_number) {
-      onGoToPage(result.page_number);
+      onGoToPage(result.page_number, result.verse_key);
       toast.success(`الانتقال إلى صفحة ${result.page_number}`);
     } else {
       toast.error("لا يمكن تحديد رقم الصفحة لهذه الآية.");

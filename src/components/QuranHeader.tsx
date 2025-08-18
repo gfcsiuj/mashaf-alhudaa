@@ -14,14 +14,11 @@ interface QuranHeaderProps {
   verses: Verse[];
   showControls: boolean;
   onOpenPanel: (panel: string) => void;
-  audioPlaylist?: any[];
-  onTrackChange?: (verseKey: string) => void;
   layoutMode: string;
   onToggleLayout: () => void;
-  onPlaylistEnded: () => void;
 }
 
-export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, audioPlaylist, onTrackChange, layoutMode, onToggleLayout, onPlaylistEnded }: QuranHeaderProps) {
+export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, layoutMode, onToggleLayout }: QuranHeaderProps) {
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const firstVerse = verses[0];
   const chapterName = getChapterName(firstVerse?.chapter_id);
@@ -46,7 +43,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
               <img 
                 src={logoUrl} 
                 alt="مصحف الهادي" 
-                className="w-10 h-10 object-contain"
+                className="w-12 h-12 object-contain"
                 onError={(e) => {
                   // Fallback to default icon if image fails to load
                   const target = e.target as HTMLImageElement;
@@ -140,19 +137,6 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
             </button>
           </div>
           </div>
-          
-          {/* Audio Player in Header */}
-          {audioPlaylist && audioPlaylist.length > 0 && (
-            <div className="audio-player-header">
-              <AudioPlayer 
-                playlist={audioPlaylist} 
-                showControls={true} 
-                isInHeader={true}
-                onTrackChange={onTrackChange}
-                onPlaylistEnded={onPlaylistEnded}
-              />
-            </div>
-          )}
         </div>
       </div>
     </header>

@@ -223,7 +223,7 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
             />
           ))
         ) : (
-          <div className={`${fontFamilyClasses[arabicFont]} text-2xl leading-loose text-justify`} dir="rtl" style={{ textAlignLast: 'center' }}>
+          <div className={`${fontFamilyClasses[arabicFont]} ${fontSizeClasses[fontSize]} leading-loose text-justify`} dir="rtl" style={{ textAlignLast: 'center' }}>
             {verses.map((verse, index) => (
               <span key={verse.id || index} className={`cursor-pointer hover:bg-gray-50 rounded px-1 transition-colors duration-200 ${highlightedVerse === verse.verse_key ? 'active-verse' : ''}`} onClick={(e) => handleVerseClick(verse, e)}>
                 {verse.text_uthmani || "نص الآية غير متوفر"}
