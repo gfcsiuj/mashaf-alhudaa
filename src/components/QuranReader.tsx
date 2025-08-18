@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAction, useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import { IndexPanel } from "./IndexPanel";
 import { SettingsPage } from "../pages/SettingsPage";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { RemindersPanel } from "./RemindersPanel";
-import { AudioPlayer } from "./AudioPlayer";
+import { AudioPlayer, AudioPlayerRef } from "./AudioPlayer";
 
 export const AUDIO_BASE_URL = 'https://verses.quran.com/';
 
@@ -30,23 +30,17 @@ interface Verse {
 
 interface PageData {
   verses: Verse[];
-  pagination?: any;
-  meta?: any;
 }
 
 export function QuranReader() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [pageData, setPageData] = useState<PageData | null>(null);
-  const [audioPlaylist, setAudioPlaylist] = useState<any[]>([]);
   const [showControls, setShowControls] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [showSettingsPage, setShowSettingsPage] = useState(false);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   const [layoutMode, setLayoutMode] = useState('flow');
-  const [forcePlay, setForcePlay] = useState(false);
 
   const localSettings = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('quranSettings') || '{}') : {};
   const [selectedReciter, setSelectedReciter] = useState(localSettings.selectedReciter || 7);
@@ -58,17 +52,16 @@ export function QuranReader() {
   const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'sepia');
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const audioPlayerRef = useRef<AudioPlayerRef>(null);
   
   const getPageData = useAction(api.quran.getPageData);
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const updateProgress = useMutation(api.quran.updateReadingProgress);
   
-  const loadPage = async (pageNumber: number, options?: { shouldStartPlaying?: boolean }) => {
-    const shouldPlay = options?.shouldStartPlaying ?? false;
-
+  const loadPage = async (pageNumber: number) => {
     if (pageNumber < 1 || pageNumber > 604) {
       toast.error("رقم الصفحة غير صالح");
-      return;
+      return null;
     }
     
     setIsLoading(true);
@@ -85,39 +78,48 @@ export function QuranReader() {
       }
       
       setPageData(data);
-      
-      const newAudioPlaylist = data.verses.map(verse => {
-        if (verse.audio?.url) {
-          return {
-            verseKey: verse.verse_key,
-            url: `https://verses.quran.com/${verse.audio.url}`
-          };
-        }
-        return null;
-      }).filter(item => item !== null);
-
-      setAudioPlaylist(newAudioPlaylist);
       setCurrentPage(pageNumber);
-      setForcePlay(shouldPlay);
-      
       await updateProgress({ pageNumber });
       localStorage.setItem('quranLastPage', pageNumber.toString());
       checkPageReminder(pageNumber);
       toast.success(`تم تحميل الصفحة ${pageNumber}`);
+      return data;
     } catch (error: any) {
       console.error("Error loading page:", error);
       toast.error(error.message || "خطأ في تحميل الصفحة");
       if (!pageData) {
         setPageData({ verses: [] });
       }
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
   const playVerseInMainPlayer = (newPlaylist: any[]) => {
-    setAudioPlaylist(newPlaylist);
-    setForcePlay(true);
+    audioPlayerRef.current?.playAudio(newPlaylist);
+  };
+
+  const playNextPage = async () => {
+    if (currentPage >= 604) return;
+    const newPageData = await loadPage(currentPage + 1);
+    if (newPageData && newPageData.verses) {
+      const newAudioPlaylist = newPageData.verses
+        .map(verse => {
+          if (verse.audio?.url) {
+            return {
+              verseKey: verse.verse_key,
+              url: `https://verses.quran.com/${verse.audio.url}`
+            };
+          }
+          return null;
+        })
+        .filter((item): item is { verseKey: string; url: string } => item !== null);
+
+      if (newAudioPlaylist.length > 0) {
+        audioPlayerRef.current?.playAudio(newAudioPlaylist);
+      }
+    }
   };
 
   const checkPageReminder = (pageNumber: number) => {
@@ -138,18 +140,19 @@ export function QuranReader() {
     const initializeApp = async () => {
       const savedPage = localStorage.getItem('quranLastPage');
       const initialPage = savedPage ? parseInt(savedPage) : 1;
-      await loadPage(initialPage, { shouldStartPlaying: false });
+      await loadPage(initialPage);
     };
     initializeApp();
   }, []);
 
   useEffect(() => {
     if (userPreferences && currentPage > 0 && pageData) {
-      loadPage(currentPage, { shouldStartPlaying: false });
+      loadPage(currentPage);
     }
   }, [userPreferences?.selectedReciter, userPreferences?.selectedTafsir]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if ((e.target as HTMLElement).closest('.header-audio-player')) return;
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
@@ -161,40 +164,20 @@ export function QuranReader() {
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
-    if (distance > 50 && currentPage < 604) {
-      loadPage(currentPage + 1, { shouldStartPlaying: true });
-    }
-    if (distance < -50 && currentPage > 1) {
-      loadPage(currentPage - 1, { shouldStartPlaying: false });
-    }
+    if (distance > 50) playNextPage();
+    if (distance < -50 && currentPage > 1) loadPage(currentPage - 1);
   };
 
   const handlePageClick = () => {
     setShowControls(prev => !prev);
   };
 
-  const goToNextPage = () => {
-    if (currentPage < 604) loadPage(currentPage + 1, { shouldStartPlaying: true });
-  };
-
-  const goToPrevPage = () => {
-    if (currentPage > 1) loadPage(currentPage - 1, { shouldStartPlaying: false });
-  };
-
+  const goToNextPage = () => playNextPage();
+  const goToPrevPage = () => { if (currentPage > 1) loadPage(currentPage - 1); };
   const goToPage = (pageNumber: number) => {
-    loadPage(pageNumber, { shouldStartPlaying: false });
+    loadPage(pageNumber);
     setActivePanel(null);
   };
-
-  useEffect(() => {
-    if (currentPage === 604) {
-      setTimeout(() => setActivePanel('completion'), 2000);
-    }
-  }, [currentPage]);
-
-  const onPlaybackStarted = useCallback(() => {
-    setForcePlay(false);
-  }, []);
 
   return (
     <div className="min-h-screen bg-main relative">
@@ -213,20 +196,15 @@ export function QuranReader() {
         onToggleLayout={() => setLayoutMode(prev => prev === 'list' ? 'flow' : 'list')}
       />
 
-      {audioPlaylist && audioPlaylist.length > 0 && (
-        <div className={`fixed top-16 left-0 right-0 z-50 p-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 invisible'}`}>
-          <AudioPlayer
-            playlist={audioPlaylist}
-            showControls={true}
-            isInHeader={true}
-            onTrackChange={setHighlightedVerse}
-            onPlaylistEnded={goToNextPage}
-            autoPlay={autoPlay}
-            startPlaying={forcePlay}
-            onPlaybackStarted={onPlaybackStarted}
-          />
-        </div>
-      )}
+      <div className={`fixed top-16 left-0 right-0 z-50 p-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 invisible'}`}>
+        <AudioPlayer
+          ref={audioPlayerRef}
+          showControls={true}
+          isInHeader={true}
+          onTrackChange={setHighlightedVerse}
+          onPlaylistEnded={playNextPage}
+        />
+      </div>
 
       <main
         ref={containerRef}
@@ -264,7 +242,7 @@ export function QuranReader() {
       {showSettingsPage && (
         <SettingsPage
           onClose={() => setShowSettingsPage(false)}
-          loadPage={() => loadPage(currentPage, { shouldStartPlaying: false })}
+          loadPage={() => loadPage(currentPage)}
           selectedReciter={selectedReciter}
           selectedTafsir={selectedTafsir}
           selectedTranslation={selectedTranslation}
@@ -283,7 +261,6 @@ export function QuranReader() {
       )}
       {activePanel === 'bookmarks' && <BookmarksPanel onClose={() => setActivePanel(null)} onGoToPage={goToPage} />}
       {activePanel === 'reminders' && <RemindersPanel onClose={() => setActivePanel(null)} currentPage={currentPage} />}
-      {activePanel === 'completion' && <CompletionPanel onClose={() => setActivePanel(null)} onRestart={() => { setActivePanel(null); goToPage(1); }} />}
     </div>
   );
 }
