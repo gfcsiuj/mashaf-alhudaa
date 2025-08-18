@@ -129,6 +129,27 @@ export const getTafsirs = action({
   },
 });
 
+// Get translations list
+export const getTranslations = action({
+  args: {},
+  handler: async (ctx) => {
+    try {
+      const url = "https://api.quran.com/api/v4/resources/translations?language=ar";
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.translations || [];
+    } catch (error) {
+      console.error("Error fetching translations:", error);
+      throw new Error("Failed to fetch translations data");
+    }
+  },
+});
+
 // Search in Quran
 export const searchQuran = action({
   args: { query: v.string() },
