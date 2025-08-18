@@ -131,15 +131,15 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ initi
   return (
     <div className={isInHeader ? "header-audio-player" : "audio-player-ui"}>
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleLoadedMetadata} onEnded={handleEnded} />
-      {playlist.length > 0 && showControls && (
+      {showControls && (
         <div className="w-full flex items-center gap-4 text-white">
-          <button onClick={prevTrack} disabled={currentTrackIndex <= 0} className="p-2 rounded-full hover:bg-white/20 disabled:opacity-50">
+          <button onClick={prevTrack} disabled={playlist.length === 0 || currentTrackIndex <= 0} className="p-2 rounded-full hover:bg-white/20 disabled:opacity-50">
             <SkipBack size={20} />
           </button>
-          <button onClick={togglePlayPause} className="p-3 bg-white text-[var(--color-accent)] rounded-full">
+          <button onClick={togglePlayPause} disabled={playlist.length === 0} className="p-3 bg-white text-[var(--color-accent)] rounded-full disabled:bg-gray-400 disabled:cursor-not-allowed">
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
           </button>
-          <button onClick={playNextTrack} disabled={currentTrackIndex >= playlist.length - 1} className="p-2 rounded-full hover:bg-white/20 disabled:opacity-50">
+          <button onClick={playNextTrack} disabled={playlist.length === 0 || currentTrackIndex >= playlist.length - 1} className="p-2 rounded-full hover:bg-white/20 disabled:opacity-50">
             <SkipForward size={20} />
           </button>
           <div className="flex-1 flex items-center gap-3">
