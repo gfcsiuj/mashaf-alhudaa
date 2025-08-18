@@ -256,7 +256,7 @@ export function QuranReader() {
 
       {/* Persistent Audio Player */}
       {audioPlaylist && audioPlaylist.length > 0 && (
-        <div className="fixed top-16 left-0 right-0 z-50 p-2">
+        <div className={`fixed top-16 left-0 right-0 z-50 p-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 invisible'}`}>
           <AudioPlayer
             playlist={audioPlaylist}
             showControls={true}
