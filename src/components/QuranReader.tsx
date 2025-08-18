@@ -65,6 +65,7 @@ export function QuranReader() {
   
   const loadPage = async (pageNumber: number, options?: { shouldStartPlaying?: boolean }) => {
     const shouldPlay = options?.shouldStartPlaying ?? false;
+    toast.info(`[R] loadPage P${pageNumber}, shouldPlay: ${shouldPlay}`);
 
     if (pageNumber < 1 || pageNumber > 604) {
       toast.error("رقم الصفحة غير صالح");
@@ -193,9 +194,11 @@ export function QuranReader() {
   }, [currentPage]);
 
   const onPlaybackStarted = useCallback(() => {
+    toast.info(`[R] onPlaybackStarted -> setForcePlay(false)`);
     setForcePlay(false);
   }, []);
 
+  toast.info(`[R] render, forcePlay: ${forcePlay}`);
   return (
     <div className="min-h-screen bg-main relative">
       <QuranHeader
