@@ -14,15 +14,11 @@ interface QuranHeaderProps {
   verses: Verse[];
   showControls: boolean;
   onOpenPanel: (panel: string) => void;
-  audioPlaylist?: any[];
-  onTrackChange?: (verseKey: string) => void;
   layoutMode: string;
   onToggleLayout: () => void;
-  onPlaylistEnded: () => void;
-  autoPlay: boolean;
 }
 
-export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, audioPlaylist, onTrackChange, layoutMode, onToggleLayout, onPlaylistEnded, autoPlay }: QuranHeaderProps) {
+export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, layoutMode, onToggleLayout }: QuranHeaderProps) {
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const firstVerse = verses[0];
   const chapterName = getChapterName(firstVerse?.chapter_id);
@@ -139,19 +135,6 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
           </div>
           </div>
           
-          {/* Audio Player in Header */}
-          {audioPlaylist && audioPlaylist.length > 0 && (
-            <div className="audio-player-header">
-              <AudioPlayer 
-                playlist={audioPlaylist} 
-                showControls={true} 
-                isInHeader={true}
-                onTrackChange={onTrackChange}
-                onPlaylistEnded={onPlaylistEnded}
-                autoPlay={autoPlay}
-              />
-            </div>
-          )}
         </div>
       </div>
     </header>

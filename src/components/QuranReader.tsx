@@ -250,24 +250,32 @@ export function QuranReader() {
             setActivePanel(panel);
           }
         }}
-        audioPlaylist={audioPlaylist}
-        onTrackChange={setHighlightedVerse}
         layoutMode={layoutMode}
         onToggleLayout={() => setLayoutMode(prev => prev === 'list' ? 'flow' : 'list')}
-        onPlaylistEnded={() => {
-          if (autoPlay) {
-            goToNextPage();
-          }
-        }}
-        autoPlay={autoPlay}
       />
 
-      {/* Audio Player - لا نعرضه هنا بعد الآن لأننا سننقله إلى القائمة العلوية */}
+      {/* Persistent Audio Player */}
+      {audioPlaylist && audioPlaylist.length > 0 && (
+        <div className="fixed top-16 left-0 right-0 z-50 p-2">
+          <AudioPlayer
+            playlist={audioPlaylist}
+            showControls={true}
+            isInHeader={true}
+            onTrackChange={setHighlightedVerse}
+            onPlaylistEnded={() => {
+              if (autoPlay) {
+                goToNextPage();
+              }
+            }}
+            autoPlay={autoPlay}
+          />
+        </div>
+      )}
 
       {/* Main Content */}
       <main
         ref={containerRef}
-        className="pt-16 pb-20 min-h-screen px-4"
+        className="pt-32 pb-20 min-h-screen px-4"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

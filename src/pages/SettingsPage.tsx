@@ -175,12 +175,15 @@ export function SettingsPage({
           </div>
           <div>
             <label className="block text-sm font-medium text-muted mb-2">المظهر</label>
-            <div className="grid grid-cols-3 gap-3 mt-2">
+            <div className="grid grid-cols-4 gap-3 mt-2">
               <button onClick={() => handleSettingChange(setLocalTheme, 'light')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'light' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <Sun size={24} className="mb-1" /><span className="text-xs">فاتح</span>
               </button>
               <button onClick={() => handleSettingChange(setLocalTheme, 'dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'dark' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <Moon size={24} className="mb-1" /><span className="text-xs">داكن</span>
+              </button>
+              <button onClick={() => handleSettingChange(setLocalTheme, 'green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'green' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+                <Leaf size={24} className="mb-1" /><span className="text-xs">أخضر</span>
               </button>
               <button onClick={() => handleSettingChange(setLocalTheme, 'sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'sepia' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
