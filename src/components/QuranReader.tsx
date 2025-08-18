@@ -237,7 +237,7 @@ export function QuranReader() {
   }, [currentPage]);
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
+    <div className="min-h-screen bg-main relative">
       {/* Header */}
       <QuranHeader
         currentPage={currentPage}
@@ -259,6 +259,7 @@ export function QuranReader() {
             goToNextPage();
           }
         }}
+        autoPlay={autoPlay}
       />
 
       {/* Audio Player - لا نعرضه هنا بعد الآن لأننا سننقله إلى القائمة العلوية */}

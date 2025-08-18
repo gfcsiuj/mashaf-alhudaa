@@ -99,79 +99,79 @@ export function SettingsPage({
   const translations = [{ id: 131, name: "The Clear Quran" }, { id: 20, name: "Saheeh International" }];
 
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 font-ui">الإعدادات</h2>
+    <div className="fixed inset-0 bg-main text-main z-50 flex flex-col">
+      <div className="flex items-center justify-between p-4 border-b border-main">
+        <h2 className="text-xl font-bold font-ui">الإعدادات</h2>
         <div className="flex items-center gap-2">
           <button onClick={saveAllSettings} disabled={!isModified} className={`p-2 rounded-lg transition-colors flex items-center gap-1 ${isModified ? 'bg-[var(--color-accent)] text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>
             <Save size={20} /><span className="font-ui text-sm">حفظ</span>
           </button>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X size={24} /></button>
+          <button onClick={onClose} className="p-2 bg-hover rounded-lg transition-colors"><X size={24} /></button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800 font-ui border-b pb-2">إعدادات الصوت</h3>
+          <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات الصوت</h3>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">القارئ المفضل</label>
-            <select value={selectedReciter} onChange={(e) => handleDataChange('selectedReciter', parseInt(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui">
+            <label className="block text-sm font-medium text-muted mb-2">القارئ المفضل</label>
+            <select value={selectedReciter} onChange={(e) => handleDataChange('selectedReciter', parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none">
               {reciters.map((reciter) => (<option key={reciter.id} value={reciter.id}>{reciter.name}</option>))}
             </select>
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700 font-ui">تشغيل تلقائي للصفحات</label>
-            <button onClick={() => handleDataChange('autoPlay', !autoPlay)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoPlay ? 'bg-[var(--color-accent)]' : 'bg-gray-200'}`}>
+            <label className="text-sm font-medium text-muted">تشغيل تلقائي للصفحات</label>
+            <button onClick={() => handleDataChange('autoPlay', !autoPlay)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoPlay ? 'bg-accent' : 'bg-gray-300'}`}>
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoPlay ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800 font-ui border-b pb-2">إعدادات العرض</h3>
+          <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات العرض</h3>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">حجم الخط</label>
-            <select value={fontSize} onChange={(e) => handleUiChange('fontSize', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui">
+            <label className="block text-sm font-medium text-muted mb-2">حجم الخط</label>
+            <select value={fontSize} onChange={(e) => handleUiChange('fontSize', e.target.value)} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none">
               <option value="small">صغير</option>
               <option value="medium">متوسط</option>
               <option value="large">كبير</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">نوع الخط العربي</label>
-            <select value={arabicFont} onChange={(e) => handleUiChange('arabicFont', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui">
+            <label className="block text-sm font-medium text-muted mb-2">نوع الخط العربي</label>
+            <select value={arabicFont} onChange={(e) => handleUiChange('arabicFont', e.target.value)} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none">
               <option value="uthmani">الخط العثماني</option>
               <option value="indopak">الخط الهندي</option>
               <option value="qpc">خط مجمع الملك فهد</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">المظهر</label>
+            <label className="block text-sm font-medium text-muted mb-2">المظهر</label>
             <div className="grid grid-cols-3 gap-3 mt-2">
-              <button onClick={() => handleUiChange('theme', 'dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${currentTheme === 'dark' ? 'bg-[var(--color-accent)] text-white ring-2 ring-[var(--color-accent)]' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                <Moon size={24} className="mb-1" /><span className="text-xs font-ui">داكن</span>
+              <button onClick={() => handleUiChange('theme', 'dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${currentTheme === 'dark' ? 'bg-accent text-white ring-2 ring-[var(--color-accent)]' : 'bg-hover'}`}>
+                <Moon size={24} className="mb-1" /><span className="text-xs">داكن</span>
               </button>
-              <button onClick={() => handleUiChange('theme', 'green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${currentTheme === 'green' ? 'bg-[var(--color-accent)] text-white ring-2 ring-[var(--color-accent)]' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                <Leaf size={24} className="mb-1" /><span className="text-xs font-ui">أخضر</span>
+              <button onClick={() => handleUiChange('theme', 'green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${currentTheme === 'green' ? 'bg-accent text-white ring-2 ring-[var(--color-accent)]' : 'bg-hover'}`}>
+                <Leaf size={24} className="mb-1" /><span className="text-xs">أخضر</span>
               </button>
-              <button onClick={() => handleUiChange('theme', 'sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${currentTheme === 'sepia' ? 'bg-[var(--color-accent)] text-white ring-2 ring-[var(--color-accent)]' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                <BookOpen size={24} className="mb-1" /><span className="text-xs font-ui">بني فاتح</span>
+              <button onClick={() => handleUiChange('theme', 'sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${currentTheme === 'sepia' ? 'bg-accent text-white ring-2 ring-[var(--color-accent)]' : 'bg-hover'}`}>
+                <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
               </button>
             </div>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800 font-ui border-b pb-2">إعدادات المحتوى</h3>
+          <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات المحتوى</h3>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">التفسير المفضل</label>
-            <select value={selectedTafsir} onChange={(e) => handleDataChange('selectedTafsir', parseInt(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui">
+            <label className="block text-sm font-medium text-muted mb-2">التفسير المفضل</label>
+            <select value={selectedTafsir} onChange={(e) => handleDataChange('selectedTafsir', parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none">
               {tafsirs.map((tafsir) => (<option key={tafsir.id} value={tafsir.id}>{tafsir.name}</option>))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-ui">الترجمة المفضلة</label>
-            <select value={selectedTranslation} onChange={(e) => handleDataChange('selectedTranslation', parseInt(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none font-ui">
+            <label className="block text-sm font-medium text-muted mb-2">الترجمة المفضلة</label>
+            <select value={selectedTranslation} onChange={(e) => handleDataChange('selectedTranslation', parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none">
               {translations.map((translation) => (<option key={translation.id} value={translation.id}>{translation.name}</option>))}
             </select>
           </div>

@@ -5,6 +5,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .bg-main { @apply bg-[var(--color-paper)]; }
+  .text-main { @apply text-[var(--color-text)]; }
+  .text-muted { @apply text-[var(--color-muted)]; }
+  .border-main { @apply border-[var(--color-border)]; }
+  .bg-accent { @apply bg-[var(--color-accent)]; }
+  .text-accent { @apply text-[var(--color-accent)]; }
+  .bg-hover { @apply hover:bg-[var(--color-hover)]; }
+}
+
 :root {
   --color-paper: #fefefe;
   --color-text: #2c2c2c;
