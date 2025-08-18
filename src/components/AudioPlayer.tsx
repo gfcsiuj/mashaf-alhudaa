@@ -53,7 +53,7 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
   useEffect(() => {
     if (playlist && playlist.length > 0 && audioRef.current) {
       setCurrentTrackIndex(0);
-      setIsPlaying(autoPlay); // Set playing state based on prop
+      setIsPlaying(true); // Always start playing on new playlist
       setCurrentTime(0);
       setDuration(0);
       setHasError(false);
@@ -61,14 +61,16 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
       const audioUrl = playlist[0].url;
       if (audioUrl && (audioUrl.startsWith('http://') || audioUrl.startsWith('https://'))) {
         try {
+          stopOtherAudioPlayers();
           if (!activeAudioPlayers.includes(audioRef.current)) {
             activeAudioPlayers.push(audioRef.current);
           }
           audioRef.current.src = audioUrl;
           audioRef.current.load();
-          if (autoPlay) {
-            audioRef.current.play().catch(e => console.error("Autoplay failed", e));
-          }
+          audioRef.current.play().catch(e => {
+            console.error("Play failed", e);
+            setIsPlaying(false);
+          });
           if (onTrackChange) onTrackChange(playlist[0].verseKey);
         } catch (error) {
           setHasError(true);
@@ -157,7 +159,13 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
   const playNextTrack = () => changeTrack(currentTrackIndex + 1);
   const prevTrack = () => changeTrack(currentTrackIndex - 1);
 
-  const handleEnded = () => playNextTrack();
+  const handleEnded = () => {
+    if (autoPlay) {
+      playNextTrack();
+    } else {
+      setIsPlaying(false);
+    }
+  };
   const handleTimeUpdate = () => { if (audioRef.current) setCurrentTime(audioRef.current.currentTime); };
   const handleLoadedMetadata = () => { if (audioRef.current) setDuration(audioRef.current.duration); };
 
