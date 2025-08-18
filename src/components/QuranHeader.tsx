@@ -61,7 +61,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
             </div>
             <div>
               <h1 className="text-lg font-semibold text-main font-ui">
-                مصحف الهادي - نسخة تجريبية
+                مصحف الهادي
               </h1>
               <p className="text-xs text-muted font-ui">القرآن الكريم</p>
             </div>
@@ -75,9 +75,6 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, au
             {juzNumber && (
               <span className="hidden md:inline">الجزء {juzNumber}</span>
             )}
-            <span className="px-3 py-1 bg-accent text-white rounded-full font-medium">
-              صفحة {currentPage}
-            </span>
           </div>
 
           {/* Right: Action Buttons */}
