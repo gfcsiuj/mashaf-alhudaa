@@ -123,8 +123,7 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
     }
   };
 
-  const handleCloseMenu = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const handleCloseMenu = () => {
     if (menuState.visible) {
       setMenuState({ visible: false, verse: null, position: { x: 0, y: 0 } });
     }
@@ -186,7 +185,7 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
   const shouldShowBasmala = isChapterStart && firstVerse?.chapter_id !== 9;
 
   return (
-    <div className="max-w-4xl mx-auto" onClick={(e) => handleCloseMenu(e)}>
+    <div className="max-w-4xl mx-auto" onClick={handleCloseMenu}>
 
       {isChapterStart && (
         <div className="w-full my-8">
