@@ -53,7 +53,6 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
   };
 
   useEffect(() => {
-    toast.info(`[A] useEffect run. startPlaying: ${startPlaying}. Playlist v: ${playlist[0]?.verseKey}`);
     if (playlist && playlist.length > 0 && audioRef.current) {
       setCurrentTrackIndex(0);
       setIsPlaying(startPlaying);
@@ -71,14 +70,11 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
           audioRef.current.src = audioUrl;
           audioRef.current.load();
           if (startPlaying) {
-            toast.info(`[A] Calling .play() for ${playlist[0]?.verseKey}`);
             audioRef.current.play()
               .then(() => {
-                toast.success(`[A] .play() succeeded`);
                 if (onPlaybackStarted) onPlaybackStarted();
               })
               .catch(e => {
-                toast.error(`[A] .play() failed: ${e.message}`);
                 console.error("Play failed", e);
                 setIsPlaying(false);
               });
