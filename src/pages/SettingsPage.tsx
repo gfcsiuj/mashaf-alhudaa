@@ -7,14 +7,12 @@ import { Moon, Save, X, Leaf, BookOpen, Sun } from "lucide-react";
 interface SettingsPageProps {
   onClose: () => void;
   loadPage: () => void;
-  // State values from parent
   selectedReciter: number;
   selectedTafsir: number;
   selectedTranslation: number;
   fontSize: string;
   currentTheme: string;
   arabicFont: string;
-  // State setters from parent
   setSelectedReciter: (id: number) => void;
   setSelectedTafsir: (id: number) => void;
   setSelectedTranslation: (id: number) => void;
@@ -39,16 +37,14 @@ export function SettingsPage({
   setCurrentTheme,
   setArabicFont,
 }: SettingsPageProps) {
-  // Local state for pending changes
-  const [isModified, setIsModified] = useState(false);
   const [localReciter, setLocalReciter] = useState(selectedReciter);
   const [localTafsir, setLocalTafsir] = useState(selectedTafsir);
   const [localTranslation, setLocalTranslation] = useState(selectedTranslation);
   const [localFontSize, setLocalFontSize] = useState(fontSize);
   const [localTheme, setLocalTheme] = useState(currentTheme);
   const [localArabicFont, setLocalArabicFont] = useState(arabicFont);
+  const [isModified, setIsModified] = useState(false);
 
-  // Data fetching
   const getReciters = useAction(api.quran.getReciters);
   const getTafsirs = useAction(api.quran.getTafsirs);
   const getTranslations = useAction(api.quran.getTranslations);
@@ -72,7 +68,6 @@ export function SettingsPage({
         setTranslations(translationsData);
       } catch (error) {
         toast.error("خطأ في تحميل بيانات الإعدادات");
-        console.error("Failed to fetch settings data:", error);
       }
     };
     fetchData();
@@ -84,7 +79,6 @@ export function SettingsPage({
   };
 
   const saveAllSettings = async () => {
-    // Apply changes to parent state
     setSelectedReciter(localReciter);
     setSelectedTafsir(localTafsir);
     setSelectedTranslation(localTranslation);
@@ -106,13 +100,12 @@ export function SettingsPage({
         await updatePreferences(settingsToSave);
       }
       localStorage.setItem('quranSettings', JSON.stringify(settingsToSave));
-      await loadPage(); // Reload page data with new settings
+      await loadPage();
       setIsModified(false);
       toast.success("تم حفظ الإعدادات بنجاح");
       onClose();
     } catch (error) {
       toast.error("خطأ في حفظ الإعدادات");
-      console.error("Error updating preferences:", error);
     }
   };
 
@@ -130,7 +123,6 @@ export function SettingsPage({
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        {/* Audio Settings */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات الصوت</h3>
           <div>
@@ -141,7 +133,6 @@ export function SettingsPage({
           </div>
         </div>
 
-        {/* Display Settings */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات العرض</h3>
           <div>
@@ -179,7 +170,6 @@ export function SettingsPage({
           </div>
         </div>
 
-        {/* Content Settings */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات المحتوى</h3>
           <div>

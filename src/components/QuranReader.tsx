@@ -53,7 +53,7 @@ export function QuranReader() {
   const [selectedTafsir, setSelectedTafsir] = useState(localSettings.selectedTafsir || 167);
   const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131);
   const [fontSize, setFontSize] = useState(localSettings.fontSize || 'medium');
-  const [autoPlay, setAutoPlay] = useState(localSettings.autoPlay || false);
+  const [autoPlay, setAutoPlay] = useState(true); // Always true as requested
   const [arabicFont, setArabicFont] = useState(localSettings.arabicFont || 'uthmani');
   const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'sepia');
 
@@ -65,11 +65,7 @@ export function QuranReader() {
   
   const loadPage = async (pageNumber: number, options?: { shouldStartPlaying?: boolean }) => {
     const shouldPlay = options?.shouldStartPlaying ?? false;
-
-    if (pageNumber < 1 || pageNumber > 604) {
-      toast.error("رقم الصفحة غير صالح");
-      return;
-    }
+    if (pageNumber < 1 || pageNumber > 604) return;
     
     setIsLoading(true);
     try {
@@ -86,30 +82,16 @@ export function QuranReader() {
       
       setPageData(data);
       
-      const newAudioPlaylist = data.verses.map(verse => {
-        if (verse.audio?.url) {
-          return {
-            verseKey: verse.verse_key,
-            url: `https://verses.quran.com/${verse.audio.url}`
-          };
-        }
-        return null;
-      }).filter(item => item !== null);
-
-      setAudioPlaylist(newAudioPlaylist);
+      const newAudioPlaylist = data.verses.map(v => v.audio ? { verseKey: v.verse_key, url: `${AUDIO_BASE_URL}${v.audio.url}` } : null).filter(Boolean);
+      setAudioPlaylist(newAudioPlaylist as any);
       setCurrentPage(pageNumber);
       setForcePlay(shouldPlay);
       
       await updateProgress({ pageNumber });
       localStorage.setItem('quranLastPage', pageNumber.toString());
-      checkPageReminder(pageNumber);
-      toast.success(`تم تحميل الصفحة ${pageNumber}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error loading page:", error);
-      toast.error(error.message || "خطأ في تحميل الصفحة");
-      if (!pageData) {
-        setPageData({ verses: [] });
-      }
+      toast.error("خطأ في تحميل الصفحة");
     } finally {
       setIsLoading(false);
     }
@@ -120,18 +102,9 @@ export function QuranReader() {
     setForcePlay(true);
   };
 
-  const checkPageReminder = (pageNumber: number) => {
-    const reminders = JSON.parse(localStorage.getItem('pageReminders') || '[]');
-    const reminder = reminders.find((r: any) => r.pageNumber === pageNumber);
-    if (reminder) {
-      toast.success(`تذكير: ${reminder.note}`, { duration: 5000 });
-    }
-  };
-
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove('theme-dark', 'theme-green', 'theme-sepia', 'theme-light');
-    root.classList.add(`theme-${currentTheme}`);
+    root.className = `theme-${currentTheme}`;
   }, [currentTheme]);
   
   useEffect(() => {
@@ -144,10 +117,10 @@ export function QuranReader() {
   }, []);
 
   useEffect(() => {
-    if (userPreferences && currentPage > 0 && pageData) {
-      loadPage(currentPage, { shouldStartPlaying: false });
+    if (pageData) { // Only run if there is existing page data
+        loadPage(currentPage, { shouldStartPlaying: false });
     }
-  }, [userPreferences?.selectedReciter, userPreferences?.selectedTafsir]);
+  }, [selectedReciter, selectedTafsir, selectedTranslation]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
@@ -169,7 +142,8 @@ export function QuranReader() {
     }
   };
 
-  const handlePageClick = () => {
+  const handlePageClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('.fixed')) return;
     setShowControls(prev => !prev);
   };
 
@@ -177,20 +151,10 @@ export function QuranReader() {
     if (currentPage < 604) loadPage(currentPage + 1, { shouldStartPlaying: true });
   };
 
-  const goToPrevPage = () => {
-    if (currentPage > 1) loadPage(currentPage - 1, { shouldStartPlaying: false });
-  };
-
   const goToPage = (pageNumber: number) => {
     loadPage(pageNumber, { shouldStartPlaying: false });
     setActivePanel(null);
   };
-
-  useEffect(() => {
-    if (currentPage === 604) {
-      setTimeout(() => setActivePanel('completion'), 2000);
-    }
-  }, [currentPage]);
 
   return (
     <div className="min-h-screen bg-main relative">
@@ -210,16 +174,14 @@ export function QuranReader() {
       />
 
       {audioPlaylist && audioPlaylist.length > 0 && (
-        <div className={`fixed top-16 left-0 right-0 z-50 p-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 invisible'}`}>
+        <div className={`fixed top-16 left-0 right-0 z-40 p-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 invisible'}`}>
           <AudioPlayer
             playlist={audioPlaylist}
             showControls={true}
             isInHeader={true}
             onTrackChange={setHighlightedVerse}
             onPlaylistEnded={() => {
-              if (autoPlay) {
-                goToNextPage();
-              }
+              if (autoPlay) goToNextPage();
             }}
             autoPlay={autoPlay}
             startPlaying={forcePlay}
@@ -241,7 +203,7 @@ export function QuranReader() {
             verses={pageData?.verses || []}
             isLoading={isLoading}
             currentPage={currentPage}
-            userPreferences={userPreferences}
+            userPreferences={userPreferences as any}
             playVerseInMainPlayer={playVerseInMainPlayer}
             highlightedVerse={highlightedVerse}
             layoutMode={layoutMode}
@@ -254,8 +216,8 @@ export function QuranReader() {
       <QuranControls
         currentPage={currentPage}
         showControls={showControls}
-        onPrevPage={goToPrevPage}
-        onNextPage={goToNextPage}
+        onPrevPage={() => { if (currentPage > 1) loadPage(currentPage - 1, { shouldStartPlaying: false }); }}
+        onNextPage={() => { if (currentPage < 604) loadPage(currentPage + 1, { shouldStartPlaying: false }); }}
         onGoToPage={goToPage}
       />
 
@@ -269,61 +231,15 @@ export function QuranReader() {
           selectedTafsir={selectedTafsir}
           selectedTranslation={selectedTranslation}
           fontSize={fontSize}
-          autoPlay={autoPlay}
           currentTheme={currentTheme}
           arabicFont={arabicFont}
           setSelectedReciter={setSelectedReciter}
           setSelectedTafsir={setSelectedTafsir}
           setSelectedTranslation={setSelectedTranslation}
           setFontSize={setFontSize}
-          setAutoPlay={setAutoPlay}
           setCurrentTheme={setCurrentTheme}
-          setArabicFont={setArabicFont}
         />
       )}
-      {activePanel === 'bookmarks' && <BookmarksPanel onClose={() => setActivePanel(null)} onGoToPage={goToPage} />}
-      {activePanel === 'reminders' && <RemindersPanel onClose={() => setActivePanel(null)} currentPage={currentPage} />}
-      {activePanel === 'completion' && <CompletionPanel onClose={() => setActivePanel(null)} onRestart={() => { setActivePanel(null); goToPage(1); }} />}
-    </div>
-  );
-}
-
-function CompletionPanel({ onClose, onRestart }: { onClose: () => void; onRestart: () => void }) {
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-        <div className="p-8 text-center space-y-6">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 font-ui">
-            تهانينا! لقد أتممت قراءة القرآن الكريم
-          </h2>
-          <div className="bg-green-50 p-6 rounded-lg border-r-4 border-green-400">
-            <h3 className="font-semibold text-green-800 mb-4 font-ui">دعاء ختم القرآن</h3>
-            <p className="text-green-700 font-ui leading-relaxed text-lg" dir="rtl">
-              اللَّهُمَّ ارْحَمْنِي بِالْقُرْآنِ، وَاجْعَلْهُ لِي إِمَامًا وَنُورًا وَهُدًى وَرَحْمَةً.
-              اللَّهُمَّ ذَكِّرْنِي مِنْهُ مَا نَسِيتُ، وَعَلِّمْنِي مِنْهُ مَا جَهِلْتُ، وَارْزُقْنِي تِلَاوَتَهُ آنَاءَ اللَّيْلِ وَأَطْرَافَ النَّهَارِ، وَاجْعَلْهُ لِي حُجَّةً يَا رَبَّ الْعَالَمِينَ.
-            </p>
-          </div>
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={onRestart}
-              className="px-6 py-3 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[#6b5b47] transition-colors font-ui"
-            >
-              ابدأ من جديد
-            </button>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-ui"
-            >
-              إغلاق
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
