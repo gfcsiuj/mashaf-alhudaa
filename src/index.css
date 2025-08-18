@@ -278,6 +278,16 @@ body {
 }
 
 /* Theme variations */
+.theme-light {
+  --color-paper: #ffffff;
+  --color-text: #202124;
+  --color-accent: #1a73e8;
+  --color-border: #dfe1e5;
+  --color-muted: #5f6368;
+  --color-hover: #f8f9fa;
+  --color-highlight: rgba(26, 115, 232, 0.1);
+}
+
 .theme-dark {
   --color-paper: #121212;
   --color-text: #e0e0e0;

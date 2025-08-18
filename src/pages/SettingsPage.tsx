@@ -12,7 +12,6 @@ interface SettingsPageProps {
   selectedTafsir: number;
   selectedTranslation: number;
   fontSize: string;
-  autoPlay: boolean;
   currentTheme: string;
   arabicFont: string;
   // State setters from parent
@@ -20,7 +19,6 @@ interface SettingsPageProps {
   setSelectedTafsir: (id: number) => void;
   setSelectedTranslation: (id: number) => void;
   setFontSize: (size: string) => void;
-  setAutoPlay: (autoPlay: boolean) => void;
   setCurrentTheme: (theme: string) => void;
   setArabicFont: (font: string) => void;
 }
@@ -32,14 +30,12 @@ export function SettingsPage({
   selectedTafsir,
   selectedTranslation,
   fontSize,
-  autoPlay,
   currentTheme,
   arabicFont,
   setSelectedReciter,
   setSelectedTafsir,
   setSelectedTranslation,
   setFontSize,
-  setAutoPlay,
   setCurrentTheme,
   setArabicFont,
 }: SettingsPageProps) {
@@ -49,7 +45,6 @@ export function SettingsPage({
   const [localTafsir, setLocalTafsir] = useState(selectedTafsir);
   const [localTranslation, setLocalTranslation] = useState(selectedTranslation);
   const [localFontSize, setLocalFontSize] = useState(fontSize);
-  const [localAutoPlay, setLocalAutoPlay] = useState(autoPlay);
   const [localTheme, setLocalTheme] = useState(currentTheme);
   const [localArabicFont, setLocalArabicFont] = useState(arabicFont);
 
@@ -94,7 +89,6 @@ export function SettingsPage({
     setSelectedTafsir(localTafsir);
     setSelectedTranslation(localTranslation);
     setFontSize(localFontSize);
-    setAutoPlay(localAutoPlay);
     setCurrentTheme(localTheme);
     setArabicFont(localArabicFont);
 
@@ -103,7 +97,6 @@ export function SettingsPage({
       selectedTafsir: localTafsir,
       selectedTranslation: localTranslation,
       fontSize: localFontSize,
-      autoPlay: localAutoPlay,
       theme: localTheme,
       arabicFont: localArabicFont,
     };
@@ -146,12 +139,6 @@ export function SettingsPage({
               {reciters.length > 0 ? reciters.map((r) => (<option key={r.id} value={r.id}>{r.name}</option>)) : <option>جار التحميل...</option>}
             </select>
           </div>
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-muted">تشغيل تلقائي للصفحات</label>
-            <button onClick={() => handleSettingChange(setLocalAutoPlay, !localAutoPlay)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localAutoPlay ? 'bg-accent' : 'bg-gray-300'}`}>
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localAutoPlay ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
-          </div>
         </div>
 
         {/* Display Settings */}
@@ -175,12 +162,15 @@ export function SettingsPage({
           </div>
           <div>
             <label className="block text-sm font-medium text-muted mb-2">المظهر</label>
-            <div className="grid grid-cols-3 gap-3 mt-2">
+            <div className="grid grid-cols-4 gap-3 mt-2">
               <button onClick={() => handleSettingChange(setLocalTheme, 'light')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'light' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <Sun size={24} className="mb-1" /><span className="text-xs">فاتح</span>
               </button>
               <button onClick={() => handleSettingChange(setLocalTheme, 'dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'dark' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <Moon size={24} className="mb-1" /><span className="text-xs">داكن</span>
+              </button>
+              <button onClick={() => handleSettingChange(setLocalTheme, 'green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'green' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+                <Leaf size={24} className="mb-1" /><span className="text-xs">أخضر</span>
               </button>
               <button onClick={() => handleSettingChange(setLocalTheme, 'sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'sepia' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
