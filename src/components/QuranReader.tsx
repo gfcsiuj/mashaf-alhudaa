@@ -216,11 +216,7 @@ export function QuranReader() {
             showControls={true}
             isInHeader={true}
             onTrackChange={setHighlightedVerse}
-            onPlaylistEnded={() => {
-              if (autoPlay) {
-                goToNextPage();
-              }
-            }}
+            onPlaylistEnded={goToNextPage}
             autoPlay={autoPlay}
             startPlaying={forcePlay}
             onPlaybackStarted={() => setForcePlay(false)}

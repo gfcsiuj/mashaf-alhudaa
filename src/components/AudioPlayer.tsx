@@ -68,16 +68,20 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
             activeAudioPlayers.push(audioRef.current);
           }
           audioRef.current.src = audioUrl;
+          audioRef.current.autoplay = startPlaying;
           audioRef.current.load();
           if (startPlaying) {
-            audioRef.current.play()
-              .then(() => {
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise.then(() => {
+                setIsPlaying(true);
                 if (onPlaybackStarted) onPlaybackStarted();
-              })
-              .catch(e => {
+              }).catch(e => {
                 console.error("Play failed", e);
+                toast.error("فشل التشغيل التلقائي، قد تحتاج إلى تفعيل الصوت في المتصفح.");
                 setIsPlaying(false);
               });
+            }
           }
           if (onTrackChange) onTrackChange(playlist[0].verseKey);
         } catch (error) {

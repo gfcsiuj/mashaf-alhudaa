@@ -27,7 +27,8 @@ export function AudioPanel({ onClose, audioPlaylist }: AudioPanelProps) {
             <div className="space-y-4">
               <AudioPlayer 
                 playlist={audioPlaylist} 
-                showControls={true} 
+                showControls={true}
+                startPlaying={true}
               />
               <p className="text-sm text-gray-500 text-center mt-4 font-ui">
                 يمكنك الاستماع إلى تلاوة الصفحة الحالية
