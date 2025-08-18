@@ -56,7 +56,7 @@ export function QuranReader() {
   const [selectedTafsir, setSelectedTafsir] = useState(localSettings.selectedTafsir || 167); // Default to Jalalayn
   const [selectedTranslation, setSelectedTranslation] = useState(localSettings.selectedTranslation || 131); // Default translation
   const [fontSize, setFontSize] = useState(localSettings.fontSize || 'medium');
-  const [autoPlay, setAutoPlay] = useState(true); // Always enabled as per user request
+  const [autoPlay, setAutoPlay] = useState(localSettings.autoPlay || false);
   const [arabicFont, setArabicFont] = useState(localSettings.arabicFont || 'uthmani');
   const [currentTheme, setCurrentTheme] = useState(localSettings.theme || 'sepia'); // إضافة حالة للثيم الحالي
   
@@ -188,13 +188,12 @@ export function QuranReader() {
     }
   }, [userPreferences?.selectedReciter, userPreferences?.selectedTafsir]);
 
-  // Reset forcePlay after it has been used
+  // Reset forcePlay after it has been used to avoid re-playing on data refresh
   useEffect(() => {
     if (forcePlay) {
-      const timer = setTimeout(() => setForcePlay(false), 100); // Reset after a short delay
-      return () => clearTimeout(timer);
+      setForcePlay(false);
     }
-  }, [forcePlay]);
+  }, [audioPlaylist]);
 
   // Touch handlers for swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -343,6 +342,7 @@ export function QuranReader() {
           selectedTafsir={selectedTafsir}
           selectedTranslation={selectedTranslation}
           fontSize={fontSize}
+          autoPlay={autoPlay}
           currentTheme={currentTheme}
           arabicFont={arabicFont}
           // Pass state setters
@@ -350,6 +350,7 @@ export function QuranReader() {
           setSelectedTafsir={setSelectedTafsir}
           setSelectedTranslation={setSelectedTranslation}
           setFontSize={setFontSize}
+          setAutoPlay={setAutoPlay}
           setCurrentTheme={setCurrentTheme}
           setArabicFont={setArabicFont}
         />

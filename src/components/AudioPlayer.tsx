@@ -162,13 +162,7 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
   const playNextTrack = () => changeTrack(currentTrackIndex + 1);
   const prevTrack = () => changeTrack(currentTrackIndex - 1);
 
-  const handleEnded = () => {
-    if (autoPlay) {
-      playNextTrack();
-    } else {
-      setIsPlaying(false);
-    }
-  };
+  const handleEnded = () => playNextTrack();
   const handleTimeUpdate = () => { if (audioRef.current) setCurrentTime(audioRef.current.currentTime); };
   const handleLoadedMetadata = () => { if (audioRef.current) setDuration(audioRef.current.duration); };
 
