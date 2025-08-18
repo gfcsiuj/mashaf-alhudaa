@@ -173,8 +173,11 @@ export function QuranReader() {
     setShowControls(prev => !prev);
   };
 
-  const goToNextPage = () => {
-    if (currentPage < 604) loadPage(currentPage + 1, { shouldStartPlaying: true });
+  const goToNextPage = async () => {
+    if (currentPage < 604) {
+      await loadPage(currentPage + 1);
+      setForcePlay(true);
+    }
   };
 
   const goToPrevPage = () => {
