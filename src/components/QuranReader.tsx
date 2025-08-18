@@ -68,7 +68,9 @@ export function QuranReader() {
   const updateProgress = useMutation(api.quran.updateReadingProgress);
   
   // Load page data
-  const loadPage = async (pageNumber: number) => {
+  const loadPage = async (pageNumber: number, options?: { shouldStartPlaying?: boolean }) => {
+    const shouldPlay = options?.shouldStartPlaying ?? false;
+
     if (pageNumber < 1 || pageNumber > 604) {
       toast.error("رقم الصفحة غير صالح");
       return;
@@ -76,7 +78,7 @@ export function QuranReader() {
     
     setIsLoading(true);
     try {
-      console.log("Loading page:", pageNumber);
+      console.log("Loading page:", pageNumber, "Should play:", shouldPlay);
       
       // Use a single, all-in-one request to get all page data
       const data = await getPageData({
@@ -107,6 +109,7 @@ export function QuranReader() {
 
       setAudioPlaylist(audioPlaylist);
       setCurrentPage(pageNumber);
+      setForcePlay(shouldPlay);
       
       // Update reading progress
       try {
@@ -167,7 +170,7 @@ export function QuranReader() {
         const savedPage = localStorage.getItem('quranLastPage');
         const initialPage = savedPage ? parseInt(savedPage) : 1;
         console.log("Initializing with page:", initialPage);
-        await loadPage(initialPage);
+        await loadPage(initialPage, { shouldStartPlaying: false });
       } catch (error) {
         console.error("Error initializing app:", error);
         setIsLoading(false);
@@ -225,7 +228,7 @@ export function QuranReader() {
 
   // Navigation functions
   const goToNextPage = () => {
-    if (currentPage < 604) loadPage(currentPage + 1);
+    if (currentPage < 604) loadPage(currentPage + 1, { shouldStartPlaying: true });
   };
 
   const goToPrevPage = () => {
