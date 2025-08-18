@@ -1,84 +1,37 @@
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { toast } from "sonner";
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 
+// متغير عام لتتبع مشغلات الصوت النشطة
 let activeAudioPlayers: HTMLAudioElement[] = [];
 
 interface AudioPlayerProps {
-  initialPlaylist?: Array<{ verseKey: string; url: string; }>;
+  playlist: Array<{
+    verseKey: string;
+    url: string;
+  }>;
   showControls: boolean;
   isInHeader?: boolean;
   onTrackChange?: (verseKey: string) => void;
   onPlaylistEnded?: () => void;
+  onPlayFromEmpty?: () => void;
+  autoPlay?: boolean;
+  startPlaying?: boolean;
+  onPlaybackStarted?: () => void;
 }
 
-export interface AudioPlayerRef {
-  playAudio: (playlist: Array<{ verseKey: string; url: string; }>) => void;
-}
-
-export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ initialPlaylist = [], showControls, isInHeader = false, onTrackChange, onPlaylistEnded }, ref) => {
-  const [playlist, setPlaylist] = useState(initialPlaylist);
+export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, isInHeader = false, onTrackChange, onPlaylistEnded, onPlayFromEmpty, autoPlay = false, startPlaying = false, onPlaybackStarted }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [hasError, setHasError] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const stopOtherAudioPlayers = () => {
-    const currentPlayer = audioRef.current;
-    activeAudioPlayers.forEach(player => {
-      if (player !== currentPlayer && !player.paused) {
-        player.pause();
-      }
-    });
-  };
-
-  useImperativeHandle(ref, () => ({
-    playAudio: (newPlaylist) => {
-      if (!audioRef.current) return;
-      
-      stopOtherAudioPlayers();
-      setPlaylist(newPlaylist);
-      setCurrentTrackIndex(0);
-
-      const audioUrl = newPlaylist[0]?.url;
-      if (audioUrl) {
-        try {
-          audioRef.current.src = audioUrl;
-          audioRef.current.load();
-          audioRef.current.play()
-            .then(() => setIsPlaying(true))
-            .catch(e => {
-              console.error("Play failed", e);
-              toast.error("فشل تشغيل الصوت");
-              setIsPlaying(false);
-            });
-          if (onTrackChange) onTrackChange(newPlaylist[0].verseKey);
-        } catch (error) {
-          toast.error("خطأ في تحميل الصوت: " + (error as Error).message);
-        }
-      }
-    }
-  }));
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      if (!activeAudioPlayers.includes(audio)) {
-        activeAudioPlayers.push(audio);
-      }
-      return () => {
-        if (audio && !audio.paused) {
-          audio.pause();
-        }
-        activeAudioPlayers = activeAudioPlayers.filter(p => p !== audio);
-      };
-    }
-  }, []);
-
+  // Function to format time in minutes:seconds
   const formatTime = (time: number) => {
     if (!time || !isFinite(time)) return "0:00";
     const minutes = Math.floor(time / 60);
@@ -86,84 +39,221 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ initi
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // دالة لإيقاف جميع مشغلات الصوت الأخرى
+  const stopOtherAudioPlayers = () => {
+    // نحتفظ بالمشغل الحالي ونوقف المشغلات الأخرى فقط
+    // هذا يمنع إيقاف الصوت عند النقر على الشاشة
+    const currentPlayer = audioRef.current;
+
+    activeAudioPlayers.forEach(player => {
+      // نتأكد من أن المشغل ليس هو المشغل الحالي قبل إيقافه
+      if (player !== currentPlayer && !player.paused) {
+        player.pause();
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (playlist && playlist.length > 0 && audioRef.current) {
+      setCurrentTrackIndex(0);
+      setIsPlaying(startPlaying);
+      setCurrentTime(0);
+      setDuration(0);
+      setHasError(false);
+
+      const audioUrl = playlist[0].url;
+      if (audioUrl && (audioUrl.startsWith('http://') || audioUrl.startsWith('https://'))) {
+        try {
+          stopOtherAudioPlayers();
+          if (!activeAudioPlayers.includes(audioRef.current)) {
+            activeAudioPlayers.push(audioRef.current);
+          }
+          audioRef.current.src = audioUrl;
+          audioRef.current.load();
+          if (startPlaying) {
+            audioRef.current.play()
+              .then(() => {
+                if (onPlaybackStarted) onPlaybackStarted();
+              })
+              .catch(e => {
+                console.error("Play failed", e);
+                setIsPlaying(false);
+              });
+          }
+          if (onTrackChange) onTrackChange(playlist[0].verseKey);
+        } catch (error) {
+          setHasError(true);
+          toast.error("خطأ في تحميل الصوت: " + (error as Error).message);
+        }
+      } else {
+        setHasError(true);
+        toast.error("رابط الصوت غير صالح");
+      }
+    }
+
+    return () => {
+      if (audioRef.current) {
+        if (!audioRef.current.paused) {
+          audioRef.current.pause();
+        }
+        activeAudioPlayers = activeAudioPlayers.filter(player => player !== audioRef.current);
+      }
+    };
+  }, [playlist, onTrackChange, startPlaying, onPlaybackStarted]);
+
   const togglePlayPause = () => {
-    if (!audioRef.current || playlist.length === 0) return;
+    if (!audioRef.current) return;
+
+    if (playlist.length === 0) {
+      if (onPlayFromEmpty) onPlayFromEmpty();
+      return;
+    }
+
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
       stopOtherAudioPlayers();
-      audioRef.current.play().catch(() => setIsPlaying(false));
+      const currentTrack = playlist[currentTrackIndex];
+      if (!currentTrack || !currentTrack.url) {
+        toast.error("رابط الصوت غير صالح");
+        return;
+      }
+
+      audioRef.current.play().catch(error => {
+        toast.error("فشل تشغيل الصوت: " + error.message);
+        setIsPlaying(false);
+      });
       setIsPlaying(true);
     }
   };
 
-  const changeTrack = (newIndex: number) => {
+  const changeTrack = (newIndex: number, shouldPlay = true) => {
     if (newIndex >= 0 && newIndex < playlist.length) {
       setCurrentTrackIndex(newIndex);
-      const nextTrack = playlist[newIndex];
-      if (audioRef.current && nextTrack?.url) {
-        audioRef.current.src = nextTrack.url;
-        audioRef.current.load();
-        if (isPlaying) {
-          audioRef.current.play().catch(() => setIsPlaying(false));
+      if (audioRef.current) {
+        const nextTrack = playlist[newIndex];
+        if (!nextTrack || !nextTrack.url) {
+          toast.error("رابط المقطع التالي غير صالح");
+          setIsPlaying(false);
+          return;
         }
-        if (onTrackChange) onTrackChange(nextTrack.verseKey);
+
+        try {
+          audioRef.current.src = nextTrack.url;
+          audioRef.current.load();
+          if (shouldPlay) {
+            audioRef.current.play().catch(error => {
+              setIsPlaying(false);
+              toast.error("فشل تشغيل المقطع التالي: " + error.message);
+            });
+            setIsPlaying(true);
+          } else {
+            setIsPlaying(false);
+          }
+          if (onTrackChange) onTrackChange(nextTrack.verseKey);
+        } catch (error) {
+          toast.error("خطأ في إعداد المقطع التالي");
+          setIsPlaying(false);
+        }
       }
     } else if (newIndex >= playlist.length) {
       setIsPlaying(false);
       setCurrentTrackIndex(0);
+      if (audioRef.current && playlist[0] && playlist[0].url) {
+        audioRef.current.src = playlist[0].url;
+        audioRef.current.load();
+        if (onTrackChange) onTrackChange(playlist[0].verseKey);
+      }
       if (onPlaylistEnded) onPlaylistEnded();
     }
   };
 
-  const playNextTrack = () => changeTrack(currentTrackIndex + 1);
-  const prevTrack = () => changeTrack(currentTrackIndex - 1);
+  const playNextTrack = () => changeTrack(currentTrackIndex + 1, true);
+  const prevTrack = () => changeTrack(currentTrackIndex - 1, isPlaying);
 
   const handleEnded = () => {
-    setIsPlaying(false);
     playNextTrack();
   };
-
   const handleTimeUpdate = () => { if (audioRef.current) setCurrentTime(audioRef.current.currentTime); };
   const handleLoadedMetadata = () => { if (audioRef.current) setDuration(audioRef.current.duration); };
 
+  const handleError = (e: any) => {
+    setHasError(true);
+    setIsPlaying(false);
+    const errorElement = e.target as HTMLAudioElement;
+    const errorCode = errorElement.error ? errorElement.error.code : 0;
+    const errorMessage = errorElement.error ? errorElement.error.message : "خطأ غير معروف";
+
+    switch (errorCode) {
+      case MediaError.MEDIA_ERR_ABORTED: toast.error("تم إلغاء تشغيل الصوت"); break;
+      case MediaError.MEDIA_ERR_NETWORK: toast.error("خطأ في الشبكة أثناء تحميل الصوت"); break;
+      case MediaError.MEDIA_ERR_DECODE: toast.error("خطأ في فك تشفير ملف الصوت"); break;
+      case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED: toast.error("تنسيق الصوت غير مدعوم أو الرابط غير صالح"); break;
+      default: toast.error("حدث خطأ أثناء تحميل الصوت: " + errorMessage);
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = parseFloat(e.target.value);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
+  };
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      if (isMuted) {
+        audioRef.current.volume = volume > 0 ? volume : 1;
+        setIsMuted(false);
+      } else {
+        audioRef.current.volume = 0;
+        setIsMuted(true);
+      }
+    }
+  };
+
   return (
     <div className={isInHeader ? "header-audio-player" : "audio-player-ui"}>
-      <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleLoadedMetadata} onEnded={handleEnded} />
-      {showControls && (
+      <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleLoadedMetadata} onError={handleError} onEnded={handleEnded} />
+
+      {playlist.length > 0 && showControls && (
         <div className="w-full flex items-center gap-4 text-white">
-          <button onClick={prevTrack} disabled={playlist.length === 0 || currentTrackIndex <= 0} className="p-2 rounded-full hover:bg-white/20 disabled:opacity-50">
-            <SkipBack size={20} />
-          </button>
-          <button onClick={togglePlayPause} disabled={playlist.length === 0} className="p-3 bg-white text-[var(--color-accent)] rounded-full disabled:bg-gray-400 disabled:cursor-not-allowed">
-            {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-          </button>
-          <button onClick={playNextTrack} disabled={playlist.length === 0 || currentTrackIndex >= playlist.length - 1} className="p-2 rounded-full hover:bg-white/20 disabled:opacity-50">
-            <SkipForward size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={prevTrack} disabled={currentTrackIndex <= 0} className="p-2 rounded-full hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <SkipBack size={20} />
+            </button>
+            <button onClick={togglePlayPause} className="p-3 bg-white text-[var(--color-accent)] rounded-full hover:bg-gray-200 transition-transform transform active:scale-95">
+              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+            </button>
+            <button onClick={playNextTrack} disabled={currentTrackIndex >= playlist.length - 1} className="p-2 rounded-full hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <SkipForward size={20} />
+            </button>
+          </div>
+
           <div className="flex-1 flex items-center gap-3">
             <span className="text-xs w-12 text-center">{formatTime(currentTime)}</span>
-            <input type="range" min="0" max={duration || 0} value={currentTime} onChange={(e) => { if(audioRef.current) audioRef.current.currentTime = parseFloat(e.target.value)}} className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer" />
+            <input type="range" min="0" max={duration || 0} value={currentTime} onChange={handleSeek} className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer audio-progress" disabled={!duration} />
             <span className="text-xs w-12 text-center">{formatTime(duration)}</span>
           </div>
+
           <div className="flex items-center gap-2">
-            <button onClick={() => {
-              if(!audioRef.current) return;
-              const newMuted = !isMuted;
-              audioRef.current.muted = newMuted;
-              setIsMuted(newMuted);
-            }} className="p-2 rounded-full hover:bg-white/20">
-              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            <button onClick={toggleMute} className="p-2 rounded-full hover:bg-white/20 transition-colors">
+              {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
             </button>
-            <input type="range" min="0" max="1" step="0.05" value={isMuted ? 0 : volume} onChange={(e) => {
-              if(!audioRef.current) return;
-              const newVolume = parseFloat(e.target.value);
-              setVolume(newVolume);
-              setIsMuted(newVolume === 0);
-              audioRef.current.volume = newVolume;
-            }} className="w-20 h-1 bg-white/30 rounded-full appearance-none cursor-pointer" />
+            <input type="range" min="0" max="1" step="0.05" value={isMuted ? 0 : volume} onChange={handleVolumeChange} className="w-20 h-1 bg-white/30 rounded-full appearance-none cursor-pointer volume-slider" />
           </div>
+
           <div className="hidden md:block text-sm font-mono bg-white/10 px-2 py-1 rounded">
             {playlist[currentTrackIndex]?.verseKey}
           </div>
