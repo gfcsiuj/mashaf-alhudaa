@@ -491,3 +491,11 @@ body {
   color: var(--color-accent) !important;
   border-radius: 4px;
 }
+
+.theme-sepia .text-accent {
+  color: #8d6e63 !important;
+}
+
+.theme-sepia .bg-accent {
+  background-color: #8d6e63 !important;
+}
