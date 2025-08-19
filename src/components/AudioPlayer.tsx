@@ -48,9 +48,11 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ initi
       if (audioUrl) {
         try {
           audioRef.current.src = audioUrl;
-          audioRef.current.load();
           audioRef.current.play()
-            .then(() => setIsPlaying(true))
+            .then(() => {
+              setIsPlaying(true);
+              toast.success("بدء تشغيل التلاوة");
+            })
             .catch(e => {
               console.error("Play failed", e);
               toast.error("فشل تشغيل الصوت");

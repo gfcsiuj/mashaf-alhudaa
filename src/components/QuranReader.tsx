@@ -196,13 +196,17 @@ export function QuranReader() {
         onToggleLayout={() => setLayoutMode(prev => prev === 'list' ? 'flow' : 'list')}
       />
 
-      <div className={`fixed top-16 left-0 right-0 z-50 p-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 invisible'}`}>
+      <div className={`fixed top-16 left-0 right-0 z-50 p-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <AudioPlayer
           ref={audioPlayerRef}
           showControls={true}
           isInHeader={true}
           onTrackChange={setHighlightedVerse}
-          onPlaylistEnded={playNextPage}
+          onPlaylistEnded={() => {
+            if (autoPlay) {
+              playNextPage();
+            }
+          }}
         />
       </div>
 

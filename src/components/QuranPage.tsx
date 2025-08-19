@@ -117,7 +117,6 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
 
     if (newPlaylist.length > 0) {
       playVerseInMainPlayer(newPlaylist);
-      toast.success("بدء تشغيل التلاوة");
     } else {
       toast.error("لا يتوفر صوت لهذه الآية");
     }
