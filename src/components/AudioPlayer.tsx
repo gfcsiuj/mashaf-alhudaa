@@ -53,10 +53,12 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
     });
   };
 
+  // Effect to load playlist and prepare the audio track
   useEffect(() => {
     if (playlist && playlist.length > 0 && audioRef.current) {
+      stopOtherAudioPlayers();
+
       setCurrentTrackIndex(0);
-      setIsPlaying(startPlaying);
       setCurrentTime(0);
       setDuration(0);
       setHasError(false);
@@ -64,22 +66,11 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
       const audioUrl = playlist[0].url;
       if (audioUrl && (audioUrl.startsWith('http://') || audioUrl.startsWith('https://'))) {
         try {
-          stopOtherAudioPlayers();
           if (!activeAudioPlayers.includes(audioRef.current)) {
             activeAudioPlayers.push(audioRef.current);
           }
           audioRef.current.src = audioUrl;
           audioRef.current.load();
-          if (startPlaying) {
-            audioRef.current.play()
-              .then(() => {
-                if (onPlaybackStarted) onPlaybackStarted();
-              })
-              .catch(e => {
-                console.error("Play failed", e);
-                setIsPlaying(false);
-              });
-          }
           if (onTrackChange) onTrackChange(playlist[0].verseKey);
         } catch (error) {
           setHasError(true);
@@ -91,15 +82,41 @@ export const AudioPlayer = memo(function AudioPlayer({ playlist, showControls, i
       }
     }
 
+    // Cleanup function to pause and remove the player when the component unmounts
     return () => {
-      if (audioRef.current) {
-        if (!audioRef.current.paused) {
-          audioRef.current.pause();
-        }
-        activeAudioPlayers = activeAudioPlayers.filter(player => player !== audioRef.current);
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
       }
+      activeAudioPlayers = activeAudioPlayers.filter(player => player !== audioRef.current);
     };
-  }, [playlist, onTrackChange, startPlaying, onPlaybackStarted]);
+  }, [playlist, onTrackChange]);
+
+  // Effect to handle auto-playing when `startPlaying` is true
+  useEffect(() => {
+    if (startPlaying && audioRef.current) {
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+            if (onPlaybackStarted) {
+              onPlaybackStarted();
+            }
+          })
+          .catch(e => {
+            console.error("Play failed", e);
+            toast.error("فشل تشغيل الصوت تلقائياً. قد تحتاج للنقر على زر التشغيل.");
+            setIsPlaying(false);
+          });
+      }
+    } else if (!startPlaying) {
+      // If startPlaying becomes false, ensure we reflect the correct playing state.
+      // This handles cases where playback might not have started.
+      if (audioRef.current?.paused) {
+        setIsPlaying(false);
+      }
+    }
+  }, [startPlaying, playlist, onPlaybackStarted]);
 
   const togglePlayPause = () => {
     if (!audioRef.current) return;
