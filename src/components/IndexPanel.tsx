@@ -15,63 +15,27 @@ interface Chapter {
 interface IndexPanelProps {
   onClose: () => void;
   onGoToPage: (page: number) => void;
+  allChapters: Chapter[] | undefined | null;
 }
 
-export function IndexPanel({ onClose, onGoToPage }: IndexPanelProps) {
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function IndexPanel({ onClose, onGoToPage, allChapters }: IndexPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
   
-  const getChapters = useAction(api.quran.getChapters);
-
-  // Load chapters data
-  useEffect(() => {
-    const loadChapters = async () => {
-      try {
-        const chaptersData = await getChapters();
-        setChapters(chaptersData || []);
-      } catch (error) {
-        toast.error("خطأ في تحميل فهرس السور");
-        console.error("Error loading chapters:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadChapters();
-  }, []);
+  const isLoading = allChapters === undefined;
+  const chapters = allChapters || [];
 
   // Filter chapters based on search
   const filteredChapters = chapters.filter(chapter =>
     chapter.name_arabic.includes(searchTerm) ||
-    chapter.name_simple.toLowerCase().includes(searchTerm.toLowerCase())
+    (chapter.name_simple && chapter.name_simple.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Get page number for chapter (simplified - you might want to use actual API data)
-  const getChapterStartPage = (chapterId: number): number => {
-    const chapterPages: { [key: number]: number } = {
-      1: 1, 2: 2, 3: 50, 4: 77, 5: 106, 6: 128, 7: 151, 8: 177, 9: 187,
-      10: 208, 11: 221, 12: 235, 13: 249, 14: 255, 15: 262, 16: 267, 17: 282,
-      18: 293, 19: 305, 20: 312, 21: 322, 22: 332, 23: 342, 24: 350, 25: 359,
-      26: 367, 27: 377, 28: 385, 29: 396, 30: 404, 31: 411, 32: 415, 33: 418,
-      34: 428, 35: 434, 36: 440, 37: 446, 38: 453, 39: 458, 40: 467, 41: 477,
-      42: 483, 43: 489, 44: 496, 45: 499, 46: 502, 47: 507, 48: 511, 49: 515,
-      50: 518, 51: 520, 52: 523, 53: 526, 54: 528, 55: 531, 56: 534, 57: 537,
-      58: 542, 59: 545, 60: 549, 61: 551, 62: 553, 63: 554, 64: 556, 65: 558,
-      66: 560, 67: 562, 68: 564, 69: 566, 70: 568, 71: 570, 72: 572, 73: 574,
-      74: 575, 75: 577, 76: 578, 77: 580, 78: 582, 79: 583, 80: 585, 81: 586,
-      82: 587, 83: 587, 84: 589, 85: 590, 86: 591, 87: 591, 88: 592, 89: 593,
-      90: 594, 91: 595, 92: 595, 93: 596, 94: 596, 95: 597, 96: 597, 97: 598,
-      98: 598, 99: 599, 100: 599, 101: 600, 102: 600, 103: 601, 104: 601,
-      105: 601, 106: 602, 107: 602, 108: 602, 109: 603, 110: 603, 111: 603,
-      112: 604, 113: 604, 114: 604
-    };
-    
-    return chapterPages[chapterId] || 1;
+  const getChapterStartPage = (chapter: Chapter): number => {
+    return chapter.pages[0] || 1;
   };
 
   const handleChapterClick = (chapter: Chapter) => {
-    const startPage = getChapterStartPage(chapter.id);
+    const startPage = getChapterStartPage(chapter);
     onGoToPage(startPage);
   };
 
@@ -131,7 +95,7 @@ export function IndexPanel({ onClose, onGoToPage }: IndexPanelProps) {
                       </div>
                     </div>
                     <div className="text-sm text-gray-500 font-ui">
-                      صفحة {getChapterStartPage(chapter.id)}
+                      صفحة {getChapterStartPage(chapter)}
                     </div>
                   </div>
                 </div>

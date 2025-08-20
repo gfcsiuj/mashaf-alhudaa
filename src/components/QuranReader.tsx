@@ -62,6 +62,7 @@ export function QuranReader() {
   const getPageData = useAction(api.quran.getPageData);
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const updateProgress = useMutation(api.quran.updateReadingProgress);
+  const allChapters = useQuery(api.quran.getChapters);
   
   const loadPage = async (pageNumber: number, options?: { shouldStartPlaying?: boolean }) => {
     const shouldPlay = options?.shouldStartPlaying ?? false;
@@ -243,6 +244,7 @@ export function QuranReader() {
         }}
         layoutMode={layoutMode}
         onToggleLayout={() => setLayoutMode(prev => prev === 'list' ? 'flow' : 'list')}
+        allChapters={allChapters}
       />
 
       {audioPlaylist && audioPlaylist.length > 0 && (
@@ -284,6 +286,7 @@ export function QuranReader() {
             layoutMode={layoutMode}
             fontSize={fontSize}
             arabicFont={arabicFont}
+            allChapters={allChapters}
           />
         </div>
       </main>
@@ -302,9 +305,10 @@ export function QuranReader() {
           onGoToVerse={goToVerse}
           playVerseInMainPlayer={playVerseInMainPlayer}
           selectedReciter={selectedReciter}
+          allChapters={allChapters}
         />
       )}
-      {activePanel === 'index' && <IndexPanel onClose={() => setActivePanel(null)} onGoToPage={goToPage} />}
+      {activePanel === 'index' && <IndexPanel onClose={() => setActivePanel(null)} onGoToPage={goToPage} allChapters={allChapters} />}
       {showSettingsPage && (
         <SettingsPage
           onClose={() => setShowSettingsPage(false)}

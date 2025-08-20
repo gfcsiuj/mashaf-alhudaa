@@ -17,19 +17,22 @@ interface SearchPanelProps {
   onGoToVerse: (page: number, verseKey: string) => void;
   playVerseInMainPlayer: (playlist: any[]) => void;
   selectedReciter: number;
+  allChapters: any[] | undefined;
 }
 
 export function SearchPanel({
   onClose,
   onGoToVerse,
   playVerseInMainPlayer,
-  selectedReciter
+  selectedReciter,
+  allChapters
 }: SearchPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [playingVerse, setPlayingVerse] = useState<string | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
 
   const searchQuran = useAction(api.quran.searchQuran);
   const getVerseAudio = useAction(api.quran.getVerseAudio);
@@ -100,57 +103,78 @@ export function SearchPanel({
   };
 
   const getChapterName = (chapterId: number): string => {
-    const chapterNames: { [key: number]: string } = {
-      1:"الفاتحة",2:"البقرة",3:"آل عمران",4:"النساء",5:"المائدة",6:"الأنعام",7:"الأعراف",8:"الأنفال",9:"التوبة",10:"يونس",11:"هود",12:"يوسف",13:"الرعد",14:"إبراهيم",15:"الحجر",16:"النحل",17:"الإسراء",18:"الكهف",19:"مريم",20:"طه",21:"الأنبياء",22:"الحج",23:"المؤمنون",24:"النور",25:"الفرقان",26:"الشعراء",27:"النمل",28:"القصص",29:"العنكبوت",30:"الروم",31:"لقمان",32:"السجدة",33:"الأحزاب",34:"سبأ",35:"فاطر",36:"يس",37:"الصافات",38:"ص",39:"الزمر",40:"غافر",41:"فصلت",42:"الشورى",43:"الزخرف",44:"الدخان",45:"الجاثية",46:"الأحقاف",47:"محمد",48:"الفتح",49:"الحجرات",50:"ق",51:"الذاريات",52:"الطور",53:"النجم",54:"القمر",55:"الرحمن",56:"الواقعة",57:"الحديد",58:"المجادلة",59:"الحشر",60:"الممتحنة",61:"الصف",62:"الجمعة",63:"المنافقون",64:"التغابن",65:"الطلاق",66:"التحريم",67:"الملك",68:"القلم",69:"الحاقة",70:"المعارج",71:"نوح",72:"الجن",73:"المزمل",74:"المدثر",75:"القيامة",76:"الإنسان",77:"المرسلات",78:"النبأ",79:"النازعات",80:"عبس",81:"التكوير",82:"الانفطار",83:"المطففين",84:"الانشقاق",85:"البروج",86:"الطارق",87:"الأعلى",88:"الغاشية",89:"الفجر",90:"البلد",91:"الشمس",92:"الليل",93:"الضحى",94:"الشرح",95:"التين",96:"العلق",97:"القدر",98:"البينة",99:"الزلزلة",100:"العاديات",101:"القارعة",102:"التكاثر",103:"العصر",104:"الهمزة",105:"الفيل",106:"قريش",107:"الماعون",108:"الكوثر",109:"الكافرون",110:"النصر",111:"المسد",112:"الإخلاص",113:"الفلق",114:"الناس"
-    };
-    return chapterNames[chapterId] || "";
+    if (!allChapters) return "";
+    const chapter = allChapters.find((c: any) => c.id === chapterId);
+    return chapter?.name_arabic || "";
   };
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 300); // Match transition duration
+  };
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, []);
+
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-        <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800 font-ui">البحث في القرآن</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">✕</button>
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-end" onClick={handleClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`bg-main w-full h-[85vh] rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+          isClosing ? 'translate-y-full' : 'translate-y-0'
+        }`}
+      >
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-main">
+          <h2 className="text-lg font-bold text-main font-ui">البحث في القرآن</h2>
+          <button onClick={handleClose} className="p-2 hover:bg-hover rounded-lg text-2xl">×</button>
         </div>
-        <div className="flex-shrink-0 p-6 border-b">
+        <div className="flex-shrink-0 p-4 border-b border-main">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="ابحث عن كلمة أو آية..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)]"
+            className="w-full px-4 py-3 bg-hover border border-main rounded-lg focus:ring-2 focus:ring-accent"
             autoFocus
           />
         </div>
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="p-8 text-center"><div className="w-8 h-8 spinner mx-auto"></div><p>جاري البحث...</p></div>
+            <div className="p-8 text-center"><div className="w-8 h-8 spinner mx-auto"></div><p className="text-muted mt-2">جاري البحث...</p></div>
           ) : hasSearched && searchResults.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">لم يتم العثور على نتائج</div>
+            <div className="p-8 text-center text-muted">لم يتم العثور على نتائج</div>
           ) : (
             <div className="p-4 space-y-3">
               {searchResults.map((result) => (
                 <div
                   key={result.verse_key}
                   onClick={() => handleResultClick(result)}
-                  className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                  className="p-4 border border-main rounded-lg hover:bg-hover cursor-pointer"
                 >
-                  <p className="font-quran text-lg mb-2">{highlightSearchTerm(result.text_uthmani, searchTerm)}</p>
+                  <p className="font-quran text-lg mb-2 text-main">{highlightSearchTerm(result.text_uthmani, searchTerm)}</p>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">
+                    <span className="text-muted">
                       {`سورة ${getChapterName(result.chapter_id)} - الآية ${result.verse_number}`}
                     </span>
                     <button
                       onClick={(e) => handlePlayVerse(e, result.verse_key)}
-                      className="p-2 rounded-full hover:bg-gray-200 disabled:opacity-50"
+                      className="p-2 rounded-full hover:bg-main disabled:opacity-50"
                       disabled={playingVerse === result.verse_key}
                       aria-label="تشغيل الآية"
                     >
                       {playingVerse === result.verse_key ? (
                         <div className="w-5 h-5 spinner"></div>
                       ) : (
-                        <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 4.31A1 1 0 018 5.14v9.72a1 1 0 01-1.7.7l-4-4.86a1 1 0 010-1.4l4-4.86zM13.7 4.31a1 1 0 011.7.7v9.72a1 1 0 01-1.7.7l-4-4.86a1 1 0 010-1.4l4-4.86z"></path></svg>
+                        <svg className="w-5 h-5 text-muted" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 016 6.002v7.996a1 1 0 01-1.445.894l-5-4a1 1 0 010-1.788l5-4zM12.555 5.168A1 1 0 0114 6.002v7.996a1 1 0 01-1.445.894l-5-4a1 1 0 010-1.788l5-4z"></path></svg>
                       )}
                     </button>
                   </div>
