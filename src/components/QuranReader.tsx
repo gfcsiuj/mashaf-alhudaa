@@ -34,6 +34,15 @@ interface PageData {
   meta?: any;
 }
 
+interface Chapter {
+  id: number;
+  name_arabic: string;
+  name_simple: string;
+  revelation_place: string;
+  verses_count: number;
+  pages: number[];
+}
+
 export function QuranReader() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,6 +56,7 @@ export function QuranReader() {
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   const [layoutMode, setLayoutMode] = useState('flow');
   const [forcePlay, setForcePlay] = useState(false);
+  const [allChapters, setAllChapters] = useState<Chapter[] | null>(null);
 
   const localSettings = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('quranSettings') || '{}') : {};
   const [selectedReciter, setSelectedReciter] = useState(localSettings.selectedReciter || 7);
@@ -62,7 +72,7 @@ export function QuranReader() {
   const getPageData = useAction(api.quran.getPageData);
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const updateProgress = useMutation(api.quran.updateReadingProgress);
-  const allChapters = useQuery(api.quran.getChapters);
+  const getChaptersAction = useAction(api.quran.getChapters);
   
   const loadPage = async (pageNumber: number, options?: { shouldStartPlaying?: boolean }) => {
     const shouldPlay = options?.shouldStartPlaying ?? false;
@@ -155,6 +165,19 @@ export function QuranReader() {
     root.classList.remove('theme-dark', 'theme-green', 'theme-sepia', 'theme-light');
     root.classList.add(`theme-${currentTheme}`);
   }, [currentTheme]);
+
+  useEffect(() => {
+    const fetchAllChapters = async () => {
+      try {
+        const chaptersData = await getChaptersAction();
+        setAllChapters(chaptersData);
+      } catch (error) {
+        console.error("Failed to fetch chapters list:", error);
+        toast.error("خطأ في تحميل فهرس السور");
+      }
+    };
+    fetchAllChapters();
+  }, [getChaptersAction]);
   
   useEffect(() => {
     const initializeApp = async () => {
