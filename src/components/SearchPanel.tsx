@@ -11,18 +11,29 @@ interface SearchResult {
   verse_number: number;
 }
 
+import { AUDIO_BASE_URL } from "./QuranReader";
+
 interface SearchPanelProps {
   onClose: () => void;
-  onGoToPage: (page: number) => void;
+  onGoToVerse: (page: number, verseKey: string) => void;
+  playVerseInMainPlayer: (playlist: any[]) => void;
+  selectedReciter: number;
 }
 
-export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
+export function SearchPanel({
+  onClose,
+  onGoToVerse,
+  playVerseInMainPlayer,
+  selectedReciter
+}: SearchPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [playingVerse, setPlayingVerse] = useState<string | null>(null);
   
   const searchVerses = useAction(api.quran.searchQuran);
+  const getVerseAudio = useAction(api.quran.getVerseAudio);
 
   // Debounced search
   useEffect(() => {
@@ -71,11 +82,33 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
   };
 
   const handleResultClick = (result: SearchResult) => {
-    if (result.page_number) {
-      onGoToPage(result.page_number);
-      toast.success(`الانتقال إلى صفحة ${result.page_number}`);
+    if (result.page_number && result.verse_key) {
+      onGoToVerse(result.page_number, result.verse_key);
     } else {
       toast.error("لا يمكن تحديد رقم الصفحة لهذه الآية.");
+    }
+  };
+
+  const handlePlayVerse = async (e: React.MouseEvent, verseKey: string) => {
+    e.stopPropagation(); // Prevent triggering handleResultClick
+    setPlayingVerse(verseKey);
+
+    try {
+      const audioData = await getVerseAudio({ verseKey, reciterId: selectedReciter });
+      if (audioData?.url) {
+        const fullUrl = `${AUDIO_BASE_URL}${audioData.url}`;
+        const playlist = [{ verseKey: verseKey, url: fullUrl }];
+        playVerseInMainPlayer(playlist);
+        toast.success(`جاري تشغيل الآية ${verseKey}`);
+      } else {
+        toast.error("لم يتم العثور على ملف صوتي لهذه الآية.");
+      }
+    } catch (error) {
+      console.error("Error fetching verse audio:", error);
+      toast.error("خطأ في جلب الملف الصوتي.");
+    } finally {
+      // The main player will handle playback state, so we can reset this
+      setTimeout(() => setPlayingVerse(null), 1000);
     }
   };
 
@@ -198,25 +231,42 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
                   key={`${result.verse_key}-${index}`}
                   onClick={() => handleResultClick(result)}
                   className="p-4 border border-gray-200 rounded-lg hover:bg-[var(--color-accent)]/5 hover:border-[var(--color-accent)] cursor-pointer transition-all group"
+                  data-verse-key={result.verse_key}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[var(--color-accent)]">📖</span>
-                      <span className="text-sm text-[var(--color-accent)] font-medium font-ui">
-                        {result.chapter_id ? `${getChapterName(result.chapter_id)} • الآية ${result.verse_number}` : result.verse_key}
-                      </span>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[var(--color-accent)]">📖</span>
+                        <span className="text-sm text-[var(--color-accent)] font-medium font-ui truncate">
+                          {result.chapter_id ? `${getChapterName(result.chapter_id)} • الآية ${result.verse_number}` : result.verse_key}
+                        </span>
+                      </div>
+                      <div
+                        className="text-gray-800 font-quran text-lg leading-relaxed group-hover:text-[var(--color-accent)] transition-colors"
+                        dir="rtl"
+                      >
+                        {highlightSearchTerm(result.text_uthmani, searchTerm)}
+                      </div>
                     </div>
-                    {result.page_number && (
-                      <span className="text-sm text-gray-500 font-ui">
-                        صفحة {result.page_number}
-                      </span>
-                    )}
-                  </div>
-                  <div 
-                    className="text-gray-800 font-quran text-lg leading-relaxed group-hover:text-[var(--color-accent)] transition-colors"
-                    dir="rtl"
-                  >
-                    {highlightSearchTerm(result.text_uthmani, searchTerm)}
+                    <div className="flex-shrink-0 flex flex-col items-center justify-start gap-2 pl-3">
+                      <button
+                        onClick={(e) => handlePlayVerse(e, result.verse_key)}
+                        className="p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50"
+                        disabled={playingVerse === result.verse_key}
+                        aria-label="تشغيل الآية"
+                      >
+                        {playingVerse === result.verse_key ? (
+                          <div className="w-5 h-5 spinner"></div>
+                        ) : (
+                          <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"></path></svg>
+                        )}
+                      </button>
+                      {result.page_number && (
+                        <span className="text-xs text-gray-500 font-ui bg-gray-100 px-2 py-1 rounded-full">
+                          ص {result.page_number}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -240,7 +290,7 @@ export function SearchPanel({ onClose, onGoToPage }: SearchPanelProps) {
         {searchResults.length > 0 && (
           <div className="p-4 border-t border-gray-200 bg-gray-50">
             <div className="text-sm text-gray-600 text-center font-ui">
-              انقر على أي نتيجة للانتقال إلى الصفحة
+              انقر على أي نتيجة للانتقال إلى الآية أو زر التشغيل للاستماع
             </div>
           </div>
         )}
