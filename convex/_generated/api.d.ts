@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as auth from "../auth.js";
+import type * as gemini from "../gemini.js";
 import type * as http from "../http.js";
 import type * as quran from "../quran.js";
 import type * as router from "../router.js";
@@ -28,6 +29,7 @@ import type * as router from "../router.js";
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  gemini: typeof gemini;
   http: typeof http;
   quran: typeof quran;
   router: typeof router;
