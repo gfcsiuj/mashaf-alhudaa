@@ -212,7 +212,6 @@ export function QuranReader() {
       loadPage(pageNumber, { shouldStartPlaying: false });
     }
     setHighlightedVerse(verseKey);
-    // Add a small delay to ensure the page is rendered before scrolling
     setTimeout(() => {
       const verseElement = document.querySelector(`[data-verse-key="${verseKey}"]`);
       if (verseElement) {
