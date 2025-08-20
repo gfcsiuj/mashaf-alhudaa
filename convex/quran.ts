@@ -66,7 +66,72 @@ export const getPageData = action({
   },
 });
 
-// Get audio for a single verse
+// Corrected search function
+export const searchQuran = action({
+  args: { query: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.query || args.query.length < 2) {
+      return { results: [] };
+    }
+    try {
+      const searchUrl = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
+      const searchResponse = await fetch(searchUrl);
+
+      if (!searchResponse.ok) {
+        console.error(`Search API request failed: ${searchResponse.status}`);
+        throw new Error(`Search API request failed: ${searchResponse.status}`);
+      }
+
+      const searchData = await searchResponse.json();
+      const results = searchData.search?.results || [];
+
+      const enrichedResults = await Promise.all(
+        results.map(async (result: any) => {
+          try {
+            const verseUrl = `https://api.quran.com/api/v4/verses/by_key/${result.verse_key}?fields=text_uthmani,chapter_id,verse_number,page_number`;
+            const verseResponse = await fetch(verseUrl);
+
+            if (!verseResponse.ok) {
+              // If fetching details fails, return a basic result with parsed data
+              return {
+                verse_key: result.verse_key,
+                text_uthmani: result.text,
+                page_number: null,
+                chapter_id: parseInt(result.verse_key.split(':')[0]),
+                verse_number: parseInt(result.verse_key.split(':')[1]),
+              };
+            }
+            const verseData = await verseResponse.json();
+
+            return {
+              verse_key: result.verse_key,
+              text_uthmani: result.text,
+              ...verseData.verse,
+            };
+          } catch (e) {
+            console.error(`Error enriching verse ${result.verse_key}:`, e);
+            return {
+              verse_key: result.verse_key,
+              text_uthmani: result.text,
+              page_number: null,
+              chapter_id: parseInt(result.verse_key.split(':')[0]),
+              verse_number: parseInt(result.verse_key.split(':')[1]),
+            };
+          }
+        })
+      );
+
+      const finalResults = enrichedResults.filter(r => r !== null);
+      return { results: finalResults };
+
+    } catch (error) {
+      console.error("Error in searchQuran action:", error);
+      throw new Error("Failed to search Quran");
+    }
+  },
+});
+
+// Corrected function to get audio for a single verse
 export const getVerseAudio = action({
   args: {
     verseKey: v.string(),
@@ -78,17 +143,20 @@ export const getVerseAudio = action({
       const response = await fetch(url);
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API request failed for getVerseAudio: ${response.status}`, errorText);
         throw new Error(`API request failed: ${response.status}`);
       }
 
       const data = await response.json();
       return data.verse?.audio || null;
     } catch (error) {
-      console.error("Error fetching verse audio:", error);
+      console.error("Error in getVerseAudio action:", error);
       throw new Error("Failed to fetch verse audio");
     }
   },
 });
+
 
 // Get all chapters for index
 export const getChapters = action({
@@ -170,57 +238,6 @@ export const getTranslations = action({
     } catch (error) {
       console.error("Error fetching translations:", error);
       throw new Error("Failed to fetch translations data");
-    }
-  },
-});
-
-// Search in Quran
-export const searchQuran = action({
-  args: { query: v.string() },
-  handler: async (ctx, args) => {
-    try {
-      const searchUrl = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
-      const searchResponse = await fetch(searchUrl);
-
-      if (!searchResponse.ok) {
-        throw new Error(`Search API request failed: ${searchResponse.status}`);
-      }
-
-      const searchData = await searchResponse.json();
-      const results = searchData.search?.results || [];
-
-      // Enrich search results with full verse data
-      const enrichedResults = await Promise.all(
-        results.map(async (result: any) => {
-          try {
-            const verseUrl = `https://api.quran.com/api/v4/verses/by_key/${result.verse_key}?fields=text_uthmani,chapter_id,verse_number,page_number`;
-            const verseResponse = await fetch(verseUrl);
-            if (!verseResponse.ok) {
-              // If fetching details fails, return the basic result
-              return { verse_key: result.verse_key, text_uthmani: result.text };
-            }
-            const verseData = await verseResponse.json();
-
-            return {
-              verse_key: result.verse_key,
-              text_uthmani: result.text, // Use the highlighted text from search result
-              ...verseData.verse, // Spread the full verse details
-            };
-          } catch (e) {
-            // On error, return the basic result
-            return { verse_key: result.verse_key, text_uthmani: result.text };
-          }
-        })
-      );
-
-      // Filter out any null results from failed fetches
-      const finalResults = enrichedResults.filter(r => r !== null);
-
-      return { results: finalResults };
-
-    } catch (error) {
-      console.error("Error searching Quran:", error);
-      throw new Error("Failed to search Quran");
     }
   },
 });
@@ -377,34 +394,5 @@ export const getReadingProgress = query({
       .query("readingProgress")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-  },
-});
-
-// Search verses
-export const searchVerses = action({
-  args: { query: v.string() },
-  handler: async (ctx, args) => {
-    try {
-      const url = `https://api.quran.com/api/v4/search?q=${encodeURIComponent(args.query)}&size=20`;
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        return [];
-      }
-
-      const data = await response.json();
-      const results = data.search?.results || [];
-
-      return results.map((result: any) => ({
-        verse_key: result.verse_key,
-        text_uthmani: result.text,
-        page_number: result.verse?.page_number || 1,
-        chapter_id: result.verse?.chapter_id || 1,
-        verse_number: result.verse?.verse_number || 1,
-      }));
-    } catch (error) {
-      console.error("Error searching verses:", error);
-      return [];
-    }
   },
 });
