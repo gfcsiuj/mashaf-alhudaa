@@ -11,22 +11,11 @@ import { SettingsPage } from "../pages/SettingsPage";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { RemindersPanel } from "./RemindersPanel";
 import { AudioPlayer } from "./AudioPlayer";
+import { type Verse } from "../lib/types";
+import { appEmitter } from "../lib/events";
+import { surahData } from "../lib/surah-data";
 
 export const AUDIO_BASE_URL = 'https://verses.quran.com/';
-
-interface Verse {
-  id: number;
-  verse_key: string;
-  text_uthmani: string;
-  chapter_id: number;
-  verse_number: number;
-  page_number: number;
-  juz_number?: number;
-  audio?: {
-    url: string;
-    duration?: number;
-  };
-}
 
 interface PageData {
   verses: Verse[];
@@ -34,7 +23,7 @@ interface PageData {
   meta?: any;
 }
 
-export function QuranReader() {
+export function QuranReader({ onAskAi }: { onAskAi: (verse: Verse) => void }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [pageData, setPageData] = useState<PageData | null>(null);
@@ -228,6 +217,58 @@ export function QuranReader() {
     }
   }, [currentPage]);
 
+  useEffect(() => {
+    const handleNavigateToPage = (data: { page: number }) => {
+      if (data && typeof data.page === 'number') {
+        goToPage(data.page);
+      }
+    };
+
+    const handleNavigateToSurah = (data: { surahName: string }) => {
+      if (data && typeof data.surahName === 'string') {
+        const surah = surahData.find(s => s.arabicName.includes(data.surahName));
+        if (surah) {
+          goToPage(surah.startPage);
+        } else {
+          toast.error(`لم يتم العثور على سورة "${data.surahName}"`);
+        }
+      }
+    };
+
+    appEmitter.on('navigateToPage', handleNavigateToPage);
+    appEmitter.on('navigateToSurah', handleNavigateToSurah);
+
+    const handleChangeTheme = (data: { theme: string }) => {
+        if (data && typeof data.theme === 'string') {
+            const validThemes = ['light', 'dark', 'green', 'sepia'];
+            if (validThemes.includes(data.theme)) {
+                setCurrentTheme(data.theme);
+                toast.success(`تم تغيير المظهر إلى ${data.theme}`);
+            }
+        }
+    };
+
+    const handleChangeFontSize = (data: { size: string }) => {
+        if (data && typeof data.size === 'string') {
+            const validSizes = ['small', 'medium', 'large'];
+            if (validSizes.includes(data.size)) {
+                setFontSize(data.size);
+                toast.success(`تم تغيير حجم الخط إلى ${data.size}`);
+            }
+        }
+    };
+
+    appEmitter.on('changeTheme', handleChangeTheme);
+    appEmitter.on('changeFontSize', handleChangeFontSize);
+
+    return () => {
+      appEmitter.off('navigateToPage', handleNavigateToPage);
+      appEmitter.off('navigateToSurah', handleNavigateToSurah);
+      appEmitter.off('changeTheme', handleChangeTheme);
+      appEmitter.off('changeFontSize', handleChangeFontSize);
+    };
+  }, [goToPage]);
+
   return (
     <div className="min-h-screen bg-main relative">
       <QuranHeader
@@ -284,6 +325,7 @@ export function QuranReader() {
             layoutMode={layoutMode}
             fontSize={fontSize}
             arabicFont={arabicFont}
+            onAskAi={onAskAi}
           />
         </div>
       </main>
