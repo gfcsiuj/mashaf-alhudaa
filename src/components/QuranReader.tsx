@@ -207,6 +207,22 @@ export function QuranReader() {
     setActivePanel(null);
   };
 
+  const goToVerse = (pageNumber: number, verseKey: string) => {
+    if (pageNumber !== currentPage) {
+      loadPage(pageNumber, { shouldStartPlaying: false });
+    }
+    setHighlightedVerse(verseKey);
+    // Add a small delay to ensure the page is rendered before scrolling
+    setTimeout(() => {
+      const verseElement = document.querySelector(`[data-verse-key="${verseKey}"]`);
+      if (verseElement) {
+        verseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 500);
+    setActivePanel(null);
+    toast.success(`تم الانتقال إلى الآية ${verseKey}`);
+  };
+
   useEffect(() => {
     if (currentPage === 604) {
       setTimeout(() => setActivePanel('completion'), 2000);
@@ -281,7 +297,14 @@ export function QuranReader() {
         onGoToPage={goToPage}
       />
 
-      {activePanel === 'search' && <SearchPanel onClose={() => setActivePanel(null)} onGoToPage={goToPage} />}
+      {activePanel === 'search' && (
+        <SearchPanel
+          onClose={() => setActivePanel(null)}
+          onGoToVerse={goToVerse}
+          playVerseInMainPlayer={playVerseInMainPlayer}
+          selectedReciter={selectedReciter}
+        />
+      )}
       {activePanel === 'index' && <IndexPanel onClose={() => setActivePanel(null)} onGoToPage={goToPage} />}
       {showSettingsPage && (
         <SettingsPage

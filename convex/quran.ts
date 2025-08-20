@@ -66,6 +66,30 @@ export const getPageData = action({
   },
 });
 
+// Get audio for a single verse
+export const getVerseAudio = action({
+  args: {
+    verseKey: v.string(),
+    reciterId: v.number(),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const url = `https://api.quran.com/api/v4/verses/by_key/${args.verseKey}?audio=${args.reciterId}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.verse?.audio || null;
+    } catch (error) {
+      console.error("Error fetching verse audio:", error);
+      throw new Error("Failed to fetch verse audio");
+    }
+  },
+});
+
 // Get all chapters for index
 export const getChapters = action({
   args: {},
