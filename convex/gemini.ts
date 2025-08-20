@@ -4,8 +4,6 @@ import { v } from "convex/values";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Note: The gemini-pro model is for text-only input.
-// See https://ai.google.dev/models/gemini for the latest model names.
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `
@@ -39,7 +37,7 @@ export const askGemini = action({
         })))
     },
     handler: async (ctx, { prompt, history }) => {
-        if (!GEMINI_API_KEY) {
+        if (!process.env.GEMINI_API_KEY) {
             throw new Error("GEMINI_API_KEY environment variable not set.");
         }
 
@@ -70,13 +68,12 @@ export const askGemini = action({
 
         if (!response.ok) {
             const errorBody = await response.text();
+            console.error("Gemini API Error:", errorBody);
             throw new Error(`Gemini API request failed with status ${response.status}: ${errorBody}`);
         }
 
         const responseData = await response.json();
-        // Handle cases where the response might not contain any candidates
         if (!responseData.candidates || responseData.candidates.length === 0) {
-            // Potentially blocked by safety settings or other issues
             console.error("Gemini response was empty or blocked.", responseData);
             return "آسف، لم أتمكن من معالجة طلبك في الوقت الحالي.";
         }
