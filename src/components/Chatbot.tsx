@@ -3,6 +3,7 @@ import { X, Send, Bot, User, BookMarked } from 'lucide-react';
 import { type Verse } from '../lib/types';
 import { appEmitter } from '../lib/events';
 import { surahData } from '../lib/surah-data';
+import { juzData } from '../lib/juz-data';
 
 const API_KEY = "AIzaSyD0USTg2CWluA3R-BgG3RDvtgaJwiUuNyg";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
@@ -22,9 +23,10 @@ You are "Abdul Hakim," an expert Islamic scholar.
 - Example tool calls:
   - To navigate to a page: {"tool": "navigateToPage", "page": 50}
   - To navigate to a surah: {"tool": "navigateToSurah", "surahName": "البقرة"}
+  - To navigate to a juz: {"tool": "navigateToJuz", "juz": 25}
 `;
 
-const ALL_SUGGESTIONS = [
+const BASE_SUGGESTIONS = [
     "ما هو فضل قراءة سورة الكهف يوم الجمعة؟", "اشرح لي قصة أصحاب الفيل", "ما هي أركان الإيمان؟",
     "تحدث عن معجزة الإسراء والمعراج", "من هم الأنبياء أولو العزم؟", "ما هو تفسير آية الكرسي؟",
     "ما هي صفات المتقين في القرآن؟", "قصة نبي الله موسى مع فرعون", "ما الفرق بين الحديث القدسي والقرآن؟",
@@ -91,7 +93,6 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
         onClose();
         break;
       case 'navigateToSurah':
-        // BUG FIX: Use a more robust search logic.
         const surah = surahData.find(s => args.surahName.includes(s.arabicName));
         if (surah) {
           appEmitter.emit('navigateToSurah', { surahName: args.surahName });
@@ -100,6 +101,11 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
         } else {
           confirmationMessage = `**عذراً:** لم أتمكن من العثور على سورة باسم "${args.surahName}".`;
         }
+        break;
+      case 'navigateToJuz':
+        appEmitter.emit('navigateToJuz', { juz: args.juz });
+        confirmationMessage = `**تم بنجاح:** جاري الانتقال إلى **الجزء ${args.juz}**.`;
+        onClose();
         break;
       default:
         confirmationMessage = `**عذراً:** لا أستطيع تنفيذ هذا الأمر.`;
@@ -160,10 +166,10 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
             if (parsedResult.tool) {
                 handleToolCall(parsedResult.tool, parsedResult);
             } else {
-                const knownTools = ['navigateToPage', 'navigateToSurah'];
+                const knownTools = ['navigateToPage', 'navigateToSurah', 'navigateToJuz'];
                 const foundTool = knownTools.find(t => parsedResult[t]);
                 if(foundTool) {
-                    handleToolCall(foundTool, { page: parsedResult[foundTool] });
+                    handleToolCall(foundTool, { [foundTool]: parsedResult[foundTool] });
                 } else {
                     throw new Error("Parsed JSON is not a recognized tool call.");
                 }
@@ -229,10 +235,29 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
   const Suggestions = () => {
     const [randomSuggestions, setRandomSuggestions] = useState<string[]>([]);
 
+    const generateSuggestions = () => {
+        const shuffled = [...BASE_SUGGESTIONS].sort(() => 0.5 - Math.random());
+
+        // Add dynamic navigation suggestions
+        const randomSurah = surahData[Math.floor(Math.random() * surahData.length)];
+        const randomJuz = juzData[Math.floor(Math.random() * juzData.length)];
+        const randomPage = Math.floor(Math.random() * 604) + 1;
+
+        const dynamicSuggestions = [
+            `خذني إلى سورة ${randomSurah.arabicName}`,
+            `انتقل إلى الجزء ${randomJuz.id}`,
+            `اذهب إلى صفحة ${randomPage}`
+        ];
+
+        const finalSuggestions = [...shuffled.slice(0, 2), ...dynamicSuggestions.sort(() => 0.5 - Math.random())];
+        setRandomSuggestions(finalSuggestions.slice(0, 4));
+    };
+
     useEffect(() => {
-        const shuffled = [...ALL_SUGGESTIONS].sort(() => 0.5 - Math.random());
-        setRandomSuggestions(shuffled.slice(0, 4));
-    }, [messages]); // Re-shuffle when messages change to feel dynamic
+        generateSuggestions(); // Initial generation
+        const intervalId = setInterval(generateSuggestions, 30000); // Regenerate every 30 seconds
+        return () => clearInterval(intervalId); // Cleanup on component unmount
+    }, []);
 
     return (
         <div className="p-3 rounded-lg self-center text-center">
@@ -249,7 +274,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 w-full max-w-lg h-full max-h-[70vh] bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col z-50 sm:h-auto sm:max-h-[600px] transition-all duration-300 ease-in-out">
+    <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-800 sm:inset-auto sm:bottom-4 sm:right-4 sm:w-full sm:max-w-lg sm:rounded-lg sm:shadow-xl sm:h-auto sm:max-h-[70vh]">
       <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">عبدالحكيم</h2>
         <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white" aria-label="Close chat">
