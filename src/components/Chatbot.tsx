@@ -7,24 +7,42 @@ import { surahData } from '../lib/surah-data';
 const API_KEY = "AIzaSyD0USTg2CWluA3R-BgG3RDvtgaJwiUuNyg";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
+// --- Persona and Suggestions ---
+
 const SYSTEM_PROMPT_TEXT = `
 You are "Abdul Hakim," an expert Islamic scholar.
 - Your name is Abdul Hakim (عبدالحكيم).
-- You MUST always respond in Arabic. Do not use English under any circumstances.
+- The website you are on is called "Quran Al-Hadi" (قرآن الهادي).
 - If the user asks who created or developed you, you must respond with the following sentence ONLY: "تم تطويري بواسطة محمد حازم احمد".
+- You MUST always respond in Arabic. Do not use English under any circumstances.
 - Your tone must be that of a wise, respectful, and compassionate religious scholar.
 - Begin every response with "بسم الله الرحمن الرحيم".
 - When the user's question is preceded by "بالإشارة إلى الآية التالية:", use the text of that verse as the primary context for your answer.
-- You also have access to tools to control the website. If the user asks to navigate or change a setting, respond ONLY with a JSON object.
+- You also have access to tools to control the website. If the user asks to navigate, respond ONLY with a JSON object.
 - Example tool calls:
   - To navigate to a page: {"tool": "navigateToPage", "page": 50}
   - To navigate to a surah: {"tool": "navigateToSurah", "surahName": "البقرة"}
 `;
 
+const ALL_SUGGESTIONS = [
+    "ما هو فضل قراءة سورة الكهف يوم الجمعة؟", "اشرح لي قصة أصحاب الفيل", "ما هي أركان الإيمان؟",
+    "تحدث عن معجزة الإسراء والمعراج", "من هم الأنبياء أولو العزم؟", "ما هو تفسير آية الكرسي؟",
+    "ما هي صفات المتقين في القرآن؟", "قصة نبي الله موسى مع فرعون", "ما الفرق بين الحديث القدسي والقرآن؟",
+    "تحدث عن فضل الصدقة", "ما هي علامات ليلة القدر؟", "قصة ذي القرنين", "ما هي محرمات الحج؟",
+    "اشرح لي حديث \"إنما الأعمال بالنيات\"", "ما هو عذاب القبر ونعيمه؟", "تحدث عن فضل صيام يوم عرفة",
+    "قصة سيدنا إبراهيم وبناء الكعبة", "ما هي شروط التوبة النصوح؟", "تحدث عن وصف الجنة في القرآن",
+    "ما هي مكانة الوالدين في الإسلام؟", "قصة قابيل وهابيل", "ما هي أنواع المياه في الفقه الإسلامي؟",
+    "تحدث عن غزوة بدر", "ما هو حكم ترك الصلاة؟", "قصة السامري والعجل", "فضل قراءة خواتيم سورة البقرة",
+    "ما هي السبع الموبقات؟", "تحدث عن أخلاق النبي محمد صلى الله عليه وسلم", "قصة أصحاب الأخدود",
+    "ما معنى اسم الله \"الرحمن\"؟"
+];
+
 const SYSTEM_PROMPT = {
     role: "system",
     parts: [{ text: SYSTEM_PROMPT_TEXT }]
 };
+
+// --- Interfaces and Component ---
 
 interface Message {
   role: 'user' | 'model' | 'system';
@@ -73,10 +91,11 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
         onClose();
         break;
       case 'navigateToSurah':
-        const surah = surahData.find(s => s.arabicName.includes(args.surahName));
+        // BUG FIX: Use a more robust search logic.
+        const surah = surahData.find(s => args.surahName.includes(s.arabicName));
         if (surah) {
           appEmitter.emit('navigateToSurah', { surahName: args.surahName });
-          confirmationMessage = `**تم بنجاح:** جاري الانتقال إلى **سورة ${args.surahName}**.`;
+          confirmationMessage = `**تم بنجاح:** جاري الانتقال إلى **سورة ${surah.arabicName}**.`;
           onClose();
         } else {
           confirmationMessage = `**عذراً:** لم أتمكن من العثور على سورة باسم "${args.surahName}".`;
@@ -130,7 +149,6 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
       const result = await response.json();
       const modelResponseText = result.candidates?.[0]?.content?.parts?.[0]?.text || 'عذراً، لم أتمكن من معالجة طلبك.';
 
-      // BUG FIX: Sanitize the response to extract JSON from markdown code blocks.
       const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
       const match = modelResponseText.match(jsonRegex);
 
@@ -142,22 +160,19 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
             if (parsedResult.tool) {
                 handleToolCall(parsedResult.tool, parsedResult);
             } else {
-                // Handle cases where the AI returns a direct tool call without the 'tool' property
                 const knownTools = ['navigateToPage', 'navigateToSurah'];
                 const foundTool = knownTools.find(t => parsedResult[t]);
                 if(foundTool) {
-                    handleToolCall(foundTool, { page: parsedResult[foundTool] }); // Corrected args
+                    handleToolCall(foundTool, { page: parsedResult[foundTool] });
                 } else {
                     throw new Error("Parsed JSON is not a recognized tool call.");
                 }
             }
         } catch (e) {
-             // If parsing the extracted JSON fails, treat it as a normal message.
             const aiMessage: Message = { role: 'model', content: modelResponseText };
             setMessages(prev => [...prev, aiMessage]);
         }
       } else {
-        // Not a tool call, treat as a regular message.
         const aiMessage: Message = { role: 'model', content: modelResponseText };
         setMessages(prev => [...prev, aiMessage]);
       }
@@ -211,16 +226,27 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
     );
   };
 
-  const Suggestions = () => (
-    <div className="p-3 rounded-lg self-center text-center">
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">أو جرب أحد هذه الاقتراحات:</p>
-        <div className="flex flex-wrap gap-2 justify-center">
-            <button onClick={() => handleSuggestionClick("اشرح لي سورة الفاتحة")} className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-600 rounded-full hover:bg-gray-300 dark:hover:bg-gray-500">اشرح لي سورة الفاتحة</button>
-            <button onClick={() => handleSuggestionClick("ما هي أركان الإسلام؟")} className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-600 rounded-full hover:bg-gray-300 dark:hover:bg-gray-500">ما هي أركان الإسلام؟</button>
-            <button onClick={() => handleSuggestionClick("قصة النبي يوسف")} className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-600 rounded-full hover:bg-gray-300 dark:hover:bg-gray-500">قصة النبي يوسف</button>
+  const Suggestions = () => {
+    const [randomSuggestions, setRandomSuggestions] = useState<string[]>([]);
+
+    useEffect(() => {
+        const shuffled = [...ALL_SUGGESTIONS].sort(() => 0.5 - Math.random());
+        setRandomSuggestions(shuffled.slice(0, 4));
+    }, [messages]); // Re-shuffle when messages change to feel dynamic
+
+    return (
+        <div className="p-3 rounded-lg self-center text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">أو جرب أحد هذه الاقتراحات:</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+                {randomSuggestions.map((suggestion, i) => (
+                    <button key={i} onClick={() => handleSuggestionClick(suggestion)} className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-600 rounded-full hover:bg-gray-300 dark:hover:bg-gray-500 transition-all">
+                        {suggestion}
+                    </button>
+                ))}
+            </div>
         </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="fixed bottom-4 right-4 w-full max-w-lg h-full max-h-[70vh] bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col z-50 sm:h-auto sm:max-h-[600px] transition-all duration-300 ease-in-out">

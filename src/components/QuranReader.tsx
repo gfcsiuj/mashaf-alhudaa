@@ -226,7 +226,9 @@ export function QuranReader({ onAskAi }: { onAskAi: (verse: Verse) => void }) {
 
     const handleNavigateToSurah = (data: { surahName: string }) => {
       if (data && typeof data.surahName === 'string') {
-        const surah = surahData.find(s => s.arabicName.includes(data.surahName));
+        // BUG FIX: Use a more robust search logic.
+        // The AI might send "سورة طه" and we need to find "طه" in it.
+        const surah = surahData.find(s => data.surahName.includes(s.arabicName));
         if (surah) {
           goToPage(surah.startPage);
         } else {
