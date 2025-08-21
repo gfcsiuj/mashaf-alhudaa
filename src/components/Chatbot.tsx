@@ -89,9 +89,11 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
     setInput('');
 
     try {
-      const historyForApi = messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
+      const historyForApi = messages
+        .filter(msg => msg.role !== 'system') // Do not include system messages in history
+        .map(msg => ({
+          role: msg.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: msg.content }]
       }));
 
       const result = await askGemini({ prompt, history: historyForApi });
