@@ -1,19 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, User, BookMarked } from 'lucide-react';
-import { useAction } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { type Verse } from '../lib/types';
 import { appEmitter } from '../lib/events';
 import { surahData } from '../lib/surah-data';
 
-// Define the message structure, now with an optional attachment
+// --- Hardcoded API Key and URL based on user's working example ---
+// IMPORTANT: This key should be moved to a .env file for production.
+const API_KEY = "AIzaSyD0USTg2CWluA3R-BgG3RDvtgaJwiUuNyg";
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+const SYSTEM_PROMPT = {
+    role: "system",
+    parts: [{ text: "You are 'Abdul Hakim,' a knowledgeable and respectful Islamic scholar. Your purpose is to assist users by providing accurate information about Islam, the Quran, and the Sunnah. You have access to tools to help the user navigate the website. When a user's request implies one of these actions, you must respond with ONLY a JSON object specifying the tool to use. Valid tools are navigateToPage, navigateToSurah, changeTheme, changeFontSize."}]
+};
+
 interface Message {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'model' | 'system';
   content: string;
   attachment?: Verse;
 }
 
-// Define the props for our component
 interface ChatbotProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,19 +28,16 @@ interface ChatbotProps {
 
 const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'بسم الله الرحمن الرحيم. أهلاً بك، أنا عبدالحكيم. كيف يمكنني مساعدتك اليوم؟' }
+    { role: 'model', content: 'بسم الله الرحمن الرحيم. أهلاً بك، أنا عبدالحكيم. كيف يمكنني مساعدتك اليوم؟' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const askGemini = useAction(api.gemini.askGemini);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
-  // Effect to scroll to the latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Effect to handle an incoming verse to ask about
   useEffect(() => {
     if (verse && isOpen) {
       const verseMessage: Message = {
@@ -76,7 +79,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
       default:
         confirmationMessage = `**عذراً:** لا أستطيع تنفيذ هذا الأمر.`;
     }
-    const toolResponseMessage: Message = { role: 'assistant', content: confirmationMessage };
+    const toolResponseMessage: Message = { role: 'model', content: confirmationMessage };
     setMessages(prev => [...prev, toolResponseMessage]);
   };
 
@@ -88,32 +91,48 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
 
-    try {
-      const historyForApi = messages
-        .filter(msg => msg.role !== 'system') // Do not include system messages in history
+    const historyForApi = messages
+        .filter(msg => msg.role !== 'system')
         .map(msg => ({
-          role: msg.role === 'assistant' ? 'model' : 'user',
+          role: msg.role,
           parts: [{ text: msg.content }]
       }));
 
-      const result = await askGemini({ prompt, history: historyForApi });
+    const payload = {
+        contents: [...historyForApi, { role: 'user', parts: [{ text: prompt }] }],
+        systemInstruction: SYSTEM_PROMPT,
+    };
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error.message || `API Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const modelResponseText = result.candidates?.[0]?.content?.parts?.[0]?.text || 'عذراً، لم أتمكن من معالجة طلبك.';
 
       try {
-        const parsedResult = JSON.parse(result);
+        const parsedResult = JSON.parse(modelResponseText);
         if (parsedResult.tool) {
           handleToolCall(parsedResult.tool, parsedResult);
         } else {
           throw new Error("Parsed JSON is not a tool call.");
         }
       } catch (e) {
-        // Not a JSON or not a tool call, treat as regular message
-        const aiMessage: Message = { role: 'assistant', content: result };
+        const aiMessage: Message = { role: 'model', content: modelResponseText };
         setMessages(prev => [...prev, aiMessage]);
       }
 
-    } catch (error) {
-      console.error("Error calling Gemini:", error);
-      const errorMessage: Message = { role: 'assistant', content: 'عذراً، حدث خطأ ما. يرجى المحاولة مرة أخرى.' };
+    } catch (error: any) {
+      console.error("Gemini API error:", error);
+      const errorMessage: Message = { role: 'model', content: `حدث خطأ: ${error.message}` };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -159,7 +178,6 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
 
   return (
     <div className="fixed bottom-4 right-4 w-full max-w-lg h-full max-h-[70vh] bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col z-50 sm:h-auto sm:max-h-[600px] transition-all duration-300 ease-in-out">
-      {/* Header */}
       <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">عبدالحكيم</h2>
         <button
@@ -171,7 +189,6 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
         </button>
       </div>
 
-      {/* Messages Area */}
       <div className="flex-1 p-4 overflow-y-auto">
         <div className="flex flex-col space-y-4">
           {messages.map((msg, index) => {
@@ -180,7 +197,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
             }
             return (
               <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {msg.role === 'assistant' && <Bot className="w-6 h-6 text-blue-500" />}
+                {msg.role === 'model' && <Bot className="w-6 h-6 text-blue-500" />}
                 <div className={`p-3 rounded-lg max-w-sm ${msg.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'}`}>
                   {renderMessageContent(msg)}
                 </div>
@@ -204,7 +221,6 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
         </div>
       </div>
 
-      {/* Input Area */}
       <form onSubmit={handleFormSubmit} className="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="relative">
           <input
