@@ -130,21 +130,34 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
       const result = await response.json();
       const modelResponseText = result.candidates?.[0]?.content?.parts?.[0]?.text || 'عذراً، لم أتمكن من معالجة طلبك.';
 
-      try {
-        const parsedResult = JSON.parse(modelResponseText);
-        if (parsedResult.tool) {
-          handleToolCall(parsedResult.tool, parsedResult);
-        } else {
-           // BUG FIX: Handle cases where the AI returns a direct tool call without the 'tool' property
-           const knownTools = ['navigateToPage', 'navigateToSurah'];
-           const foundTool = knownTools.find(t => parsedResult[t]);
-           if(foundTool) {
-             handleToolCall(foundTool, { [foundTool]: parsedResult[foundTool] });
-           } else {
-             throw new Error("Parsed JSON is not a recognized tool call.");
-           }
+      // BUG FIX: Sanitize the response to extract JSON from markdown code blocks.
+      const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+      const match = modelResponseText.match(jsonRegex);
+
+      if (match && match[1]) {
+        try {
+            const jsonString = match[1];
+            const parsedResult = JSON.parse(jsonString);
+
+            if (parsedResult.tool) {
+                handleToolCall(parsedResult.tool, parsedResult);
+            } else {
+                // Handle cases where the AI returns a direct tool call without the 'tool' property
+                const knownTools = ['navigateToPage', 'navigateToSurah'];
+                const foundTool = knownTools.find(t => parsedResult[t]);
+                if(foundTool) {
+                    handleToolCall(foundTool, { page: parsedResult[foundTool] }); // Corrected args
+                } else {
+                    throw new Error("Parsed JSON is not a recognized tool call.");
+                }
+            }
+        } catch (e) {
+             // If parsing the extracted JSON fails, treat it as a normal message.
+            const aiMessage: Message = { role: 'model', content: modelResponseText };
+            setMessages(prev => [...prev, aiMessage]);
         }
-      } catch (e) {
+      } else {
+        // Not a tool call, treat as a regular message.
         const aiMessage: Message = { role: 'model', content: modelResponseText };
         setMessages(prev => [...prev, aiMessage]);
       }
