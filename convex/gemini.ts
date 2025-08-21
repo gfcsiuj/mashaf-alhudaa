@@ -4,7 +4,7 @@ import { v } from "convex/values";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `
 You are "Abdul Hakim," a knowledgeable and respectful Islamic scholar. Your purpose is to assist users by providing accurate information about Islam, the Quran, and the Sunnah.
