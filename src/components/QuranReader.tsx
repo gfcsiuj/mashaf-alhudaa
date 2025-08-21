@@ -14,6 +14,7 @@ import { AudioPlayer } from "./AudioPlayer";
 import { type Verse } from "../lib/types";
 import { appEmitter } from "../lib/events";
 import { surahData } from "../lib/surah-data";
+import { juzData } from "../lib/juz-data";
 
 export const AUDIO_BASE_URL = 'https://verses.quran.com/';
 
@@ -263,11 +264,24 @@ export function QuranReader({ onAskAi }: { onAskAi: (verse: Verse) => void }) {
     appEmitter.on('changeTheme', handleChangeTheme);
     appEmitter.on('changeFontSize', handleChangeFontSize);
 
+    const handleNavigateToJuz = (data: { juz: number }) => {
+        if (data && typeof data.juz === 'number') {
+            const juz = juzData.find(j => j.id === data.juz);
+            if (juz) {
+                goToPage(juz.startPage);
+            } else {
+                toast.error(`لم يتم العثور على جزء "${data.juz}"`);
+            }
+        }
+    };
+    appEmitter.on('navigateToJuz', handleNavigateToJuz);
+
     return () => {
       appEmitter.off('navigateToPage', handleNavigateToPage);
       appEmitter.off('navigateToSurah', handleNavigateToSurah);
       appEmitter.off('changeTheme', handleChangeTheme);
       appEmitter.off('changeFontSize', handleChangeFontSize);
+      appEmitter.off('navigateToJuz', handleNavigateToJuz);
     };
   }, [goToPage]);
 
