@@ -37,7 +37,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, la
           {/* Left: App Title with Logo */}
           <div className="flex items-center gap-3">
             {/* Container for centering the logo */}
-            <div className="w-12 h-12 flex items-center justify-center">
+            <div className="w-12 h-12 object-cover rounded-lg shadow-sm border border-main"
               <img 
                 src={logoUrl} 
                 alt="مصحف الهادي" 
