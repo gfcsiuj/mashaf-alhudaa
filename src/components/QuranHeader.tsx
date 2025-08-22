@@ -1,8 +1,11 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+
 import { AudioPlayer } from "./AudioPlayer";
 import { useState } from "react";
 import { LayoutGrid, LayoutList, CheckCircle } from "lucide-react";
+import { LayoutGrid, LayoutList } from "lucide-react";
+
 
 interface Verse {
   chapter_id: number;
@@ -35,20 +38,30 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, la
   return (
     <header className="fixed top-0 left-0 right-0 bg-main/95 backdrop-blur-sm border-b border-main z-40 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-3">
-        <div className="flex flex-col space-y-2">
-          <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">
           {/* Left: App Title with Logo */}
           <div className="flex items-center gap-3">
+
             <div className="w-12 h-12 flex items-center justify-center">
               <img 
                 src={logoUrl} 
                 alt="مصحف الهادي" 
                 className="w-14 h-14 object-cover rounded-lg shadow-sm border border-main bg-main"
+            {/* Container for centering the logo */}
+            <div className="w-12 h-12 rounded-lg bg-main shadow-sm border border-main flex items-center justify-center overflow-hidden">
+              <img 
+                src={logoUrl} 
+                alt="مصحف الهادي" 
+                // Image fills the container and maintains aspect ratio
+                className="w-full h-full object-contain"
                 onError={(e) => {
                   // Fallback to default icon if image fails to load
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('hidden');
+                  const nextSibling = target.nextElementSibling;
+                  if (nextSibling) {
+                    nextSibling.classList.remove('hidden');
+                  }
                 }}
               />
               <svg className="w-6 h-6 text-accent hidden" fill="currentColor" viewBox="0 0 24 24">
@@ -115,7 +128,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, la
               title="الإعدادات"
             >
               <svg className="w-5 h-5 text-muted group-hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
@@ -140,8 +153,6 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, la
               )}
             </button>
           </div>
-          </div>
-          
         </div>
       </div>
     </header>
