@@ -208,9 +208,9 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
             />
           ))
         ) : (
-          <div className={`${fontFamilyClasses[arabicFont]} text-2xl leading-loose text-justify text-main`} dir="rtl" style={{ textAlignLast: 'center' }}>
+          <div className={`${fontFamilyClasses[arabicFont]} text-3xl leading-relaxed text-right text-main p-4`} dir="rtl">
             {verses.map((verse, index) => (
-              <span key={verse.id || index} className={`cursor-pointer bg-hover rounded px-1 transition-colors duration-200 ${highlightedVerse === verse.verse_key ? 'active-verse' : ''}`} onClick={(e) => handleVerseClick(verse, e)}>
+              <span key={verse.id || index} className={`cursor-pointer hover:bg-hover rounded px-1 transition-colors duration-200 ${highlightedVerse === verse.verse_key ? 'active-verse' : ''}`} onClick={(e) => handleVerseClick(verse, e)}>
                 {verse.text_uthmani || "نص الآية غير متوفر"}
                 <span className="verse-number">{verse.verse_number}</span>
                 {index < verses.length - 1 && " "}

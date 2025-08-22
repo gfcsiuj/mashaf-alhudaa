@@ -8,6 +8,7 @@ import { type Verse } from "./lib/types";
 export default function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [verseToAsk, setVerseToAsk] = useState<Verse | null>(null);
+  const [showControls, setShowControls] = useState(true);
 
   const handleAskAi = (verse: Verse) => {
     setVerseToAsk(verse);
@@ -16,17 +17,24 @@ export default function App() {
 
   const handleCloseChat = () => {
     setIsChatOpen(false);
-    // Delay clearing the verse to allow for closing animation
     setTimeout(() => {
       setVerseToAsk(null);
     }, 300);
   };
 
+  const handlePageClick = () => {
+    setShowControls(prev => !prev);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <QuranReader onAskAi={handleAskAi} />
+      <QuranReader
+        onAskAi={handleAskAi}
+        showControls={showControls}
+        onPageClick={handlePageClick}
+      />
       
-      {!isChatOpen && (
+      {!isChatOpen && showControls && (
         <button
           onClick={() => setIsChatOpen(true)}
           className="fixed bottom-20 right-4 z-40 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform hover:scale-110"

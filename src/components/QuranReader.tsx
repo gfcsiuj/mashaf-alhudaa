@@ -24,12 +24,17 @@ interface PageData {
   meta?: any;
 }
 
-export function QuranReader({ onAskAi }: { onAskAi: (verse: Verse) => void }) {
+interface QuranReaderProps {
+  onAskAi: (verse: Verse) => void;
+  showControls: boolean;
+  onPageClick: () => void;
+}
+
+export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [audioPlaylist, setAudioPlaylist] = useState<any[]>([]);
-  const [showControls, setShowControls] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [showSettingsPage, setShowSettingsPage] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -178,10 +183,6 @@ export function QuranReader({ onAskAi }: { onAskAi: (verse: Verse) => void }) {
     if (distance < -50 && currentPage > 1) {
       loadPage(currentPage - 1, { shouldStartPlaying: false });
     }
-  };
-
-  const handlePageClick = () => {
-    setShowControls(prev => !prev);
   };
 
   const goToNextPage = () => {
@@ -336,7 +337,7 @@ export function QuranReader({ onAskAi }: { onAskAi: (verse: Verse) => void }) {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={handlePageClick}
+        onClick={onPageClick}
       >
         <div className="py-6">
           <QuranPage
