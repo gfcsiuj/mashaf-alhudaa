@@ -10,6 +10,8 @@ import { IndexPanel } from "./IndexPanel";
 import { SettingsPage } from "../pages/SettingsPage";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { RemindersPanel } from "./RemindersPanel";
+import { KhatmahPanel } from "./KhatmahPanel";
+import { VerseImageGenerator } from "./VerseImageGenerator";
 import { AudioPlayer } from "./AudioPlayer";
 import { type Verse } from "../lib/types";
 import { appEmitter } from "../lib/events";
@@ -37,11 +39,13 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
   const [audioPlaylist, setAudioPlaylist] = useState<any[]>([]);
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [showSettingsPage, setShowSettingsPage] = useState(false);
+  const [verseToShare, setVerseToShare] = useState<Verse | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   const [layoutMode, setLayoutMode] = useState('flow');
   const [forcePlay, setForcePlay] = useState(false);
+  const [animationDirection, setAnimationDirection] = useState<'left' | 'right' | 'fade' | null>(null);
 
   const localSettings = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('quranSettings') || '{}') : {};
   const [selectedReciter, setSelectedReciter] = useState(localSettings.selectedReciter || 7);
@@ -58,8 +62,9 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
   const userPreferences = useQuery(api.quran.getUserPreferences);
   const updateProgress = useMutation(api.quran.updateReadingProgress);
   
-  const loadPage = async (pageNumber: number, options?: { shouldStartPlaying?: boolean }) => {
+  const loadPage = async (pageNumber: number, options?: { shouldStartPlaying?: boolean, newReciterId?: number }) => {
     const shouldPlay = options?.shouldStartPlaying ?? false;
+    const reciterToFetch = options?.newReciterId ?? selectedReciter;
 
     if (pageNumber < 1 || pageNumber > 604) {
       toast.error("رقم الصفحة غير صالح");
@@ -70,7 +75,7 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
     try {
       const data = await getPageData({
         pageNumber,
-        reciterId: selectedReciter,
+        reciterId: reciterToFetch,
         tafsirId: selectedTafsir,
         translationId: selectedTranslation,
       });
@@ -177,23 +182,38 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
-    if (distance > 50 && currentPage < 604) {
+    const isNext = distance > 50 && currentPage < 604;
+    const isPrev = distance < -50 && currentPage > 1;
+
+    if (isNext) {
+      setAnimationDirection('left');
       loadPage(currentPage + 1, { shouldStartPlaying: false });
-    }
-    if (distance < -50 && currentPage > 1) {
+    } else if (isPrev) {
+      setAnimationDirection('right');
       loadPage(currentPage - 1, { shouldStartPlaying: false });
     }
   };
 
+  const handleShareVerse = (verse: Verse) => {
+    setVerseToShare(verse);
+  };
+
   const goToNextPage = () => {
-    if (currentPage < 604) loadPage(currentPage + 1, { shouldStartPlaying: true });
+    if (currentPage < 604) {
+      setAnimationDirection('left');
+      loadPage(currentPage + 1, { shouldStartPlaying: true });
+    }
   };
 
   const goToPrevPage = () => {
-    if (currentPage > 1) loadPage(currentPage - 1, { shouldStartPlaying: false });
+    if (currentPage > 1) {
+      setAnimationDirection('right');
+      loadPage(currentPage - 1, { shouldStartPlaying: false });
+    }
   };
 
   const goToPage = (pageNumber: number) => {
+    setAnimationDirection('fade');
     loadPage(pageNumber, { shouldStartPlaying: false });
     setActivePanel(null);
   };
@@ -351,6 +371,8 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
             fontSize={fontSize}
             arabicFont={arabicFont}
             onAskAi={onAskAi}
+            animationDirection={animationDirection}
+            onShareVerse={handleShareVerse}
           />
         </div>
       </main>
@@ -375,7 +397,8 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
       {showSettingsPage && (
         <SettingsPage
           onClose={() => setShowSettingsPage(false)}
-          loadPage={() => loadPage(currentPage, { shouldStartPlaying: false })}
+          loadPage={(options) => loadPage(currentPage, options)}
+          currentPage={currentPage}
           selectedReciter={selectedReciter}
           selectedTafsir={selectedTafsir}
           selectedTranslation={selectedTranslation}
@@ -394,6 +417,8 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
       )}
       {activePanel === 'bookmarks' && <BookmarksPanel onClose={() => setActivePanel(null)} onGoToPage={goToPage} />}
       {activePanel === 'reminders' && <RemindersPanel onClose={() => setActivePanel(null)} currentPage={currentPage} />}
+      {activePanel === 'khatmah' && <KhatmahPanel onClose={() => setActivePanel(null)} />}
+      {verseToShare && <VerseImageGenerator verse={verseToShare} onClose={() => setVerseToShare(null)} />}
       {activePanel === 'completion' && <CompletionPanel onClose={() => setActivePanel(null)} onRestart={() => { setActivePanel(null); goToPage(1); }} />}
     </div>
   );

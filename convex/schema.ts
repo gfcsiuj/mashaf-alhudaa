@@ -61,6 +61,16 @@ const applicationTables = {
     pages: v.array(v.number()),
     cachedAt: v.number(),
   }).index("by_chapter", ["chapterId"]),
+
+  // Khatmah (full Quran reading) tracking
+  khatmahs: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    startDate: v.number(),
+    targetDate: v.optional(v.number()),
+    completedPages: v.array(v.number()),
+    isActive: v.boolean(),
+  }).index("by_user", ["userId"]),
 };
 
 export default defineSchema({

@@ -2,7 +2,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { AudioPlayer } from "./AudioPlayer";
 import { useState } from "react";
-import { LayoutGrid, LayoutList } from "lucide-react";
+import { LayoutGrid, LayoutList, CheckCircle } from "lucide-react";
 
 interface Verse {
   chapter_id: number;
@@ -101,6 +101,13 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, la
               <svg className="w-5 h-5 text-muted group-hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
+            </button>
+            <button
+              onClick={() => onOpenPanel('khatmah')}
+              className="p-2 bg-hover rounded-lg transition-colors group"
+              title="الختمة"
+            >
+              <CheckCircle className="w-5 h-5 text-muted group-hover:text-accent" />
             </button>
             <button
               onClick={() => onOpenPanel('settings')}
