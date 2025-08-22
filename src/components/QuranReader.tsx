@@ -155,8 +155,6 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
     root.classList.add(`theme-${currentTheme}`);
   }, [currentTheme]);
   
-  const isInitialMount = useRef(true);
-
   useEffect(() => {
     const initializeApp = async () => {
       const savedPage = localStorage.getItem('quranLastPage');
@@ -167,14 +165,10 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
   }, []);
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    if (currentPage > 0) {
+    if (userPreferences && currentPage > 0 && pageData) {
       loadPage(currentPage, { shouldStartPlaying: false });
     }
-  }, [selectedReciter, selectedTafsir, selectedTranslation]);
+  }, [userPreferences?.selectedReciter, userPreferences?.selectedTafsir]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
@@ -254,8 +248,6 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
 
     const handleNavigateToSurah = (data: { surahName: string }) => {
       if (data && typeof data.surahName === 'string') {
-        // BUG FIX: Use a more robust search logic.
-        // The AI might send "سورة طه" and we need to find "طه" in it.
         const surah = surahData.find(s => data.surahName.includes(s.arabicName));
         if (surah) {
           goToPage(surah.startPage);
@@ -423,7 +415,7 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
       )}
       {activePanel === 'bookmarks' && <BookmarksPanel onClose={() => setActivePanel(null)} onGoToPage={goToPage} />}
       {activePanel === 'reminders' && <RemindersPanel onClose={() => setActivePanel(null)} currentPage={currentPage} />}
-      {activePanel === 'khatmah' && <KhatmahPanel onClose={() => setActivePanel(null)} />}
+      {activePanel === 'khatmah' && <KhatmahPanel onClose={() => setActivePanel(null)} onGoToPage={goToPage} />}
       {verseToShare && <VerseImageGenerator verse={verseToShare} onClose={() => setVerseToShare(null)} />}
       {activePanel === 'completion' && <CompletionPanel onClose={() => setActivePanel(null)} onRestart={() => { setActivePanel(null); goToPage(1); }} />}
     </div>

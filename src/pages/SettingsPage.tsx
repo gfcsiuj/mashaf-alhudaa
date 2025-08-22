@@ -4,11 +4,6 @@ import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Moon, Save, X, Leaf, BookOpen, Sun, AudioLines, SlidersHorizontal, FileText, ChevronLeft } from "lucide-react";
 import { RecitersList } from "../components/RecitersList";
-import { useConvexAuth, useQuery, useMutation, useAction } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { toast } from "sonner";
-import { Moon, Save, X, Leaf, BookOpen, Sun } from "lucide-react";
-import { RecitersList } from "../components/RecitersList"; // <-- استيراد المكون الجديد
 
 interface SettingsPageProps {
   onClose: () => void;
@@ -45,7 +40,6 @@ export function SettingsPage({
   setCurrentTheme,
   setArabicFont,
 }: SettingsPageProps) {
-  const { isAuthenticated } = useConvexAuth();
   const [isModified, setIsModified] = useState(false);
   const [activeTab, setActiveTab] = useState('display');
   const [showRecitersPanel, setShowRecitersPanel] = useState(false);
@@ -56,8 +50,6 @@ export function SettingsPage({
   const [localFontSize, setLocalFontSize] = useState(fontSize);
   const [localTheme, setLocalTheme] = useState(currentTheme);
   const [localArabicFont, setLocalArabicFont] = useState(arabicFont);
-  
-  const [showRecitersPanel, setShowRecitersPanel] = useState(false); // <-- حالة جديدة لإظهار/إخفاء لوحة القراء
 
   const getReciters = useAction(api.quran.getReciters);
   const getTafsirs = useAction(api.quran.getTafsirs);
@@ -107,12 +99,6 @@ export function SettingsPage({
     setIsModified(true);
   };
 
-  const handleThemeChange = (theme: string) => {
-    setLocalTheme(theme);
-    setCurrentTheme(theme); // Apply theme instantly
-    setIsModified(true);
-  };
-
   const saveAllSettings = async () => {
     setSelectedReciter(localReciter);
     setSelectedTafsir(localTafsir);
@@ -131,11 +117,8 @@ export function SettingsPage({
     };
 
     try {
-      if (isAuthenticated) {
-        await updatePreferences(settingsToSave);
-      }
+      await updatePreferences(settingsToSave);
       localStorage.setItem('quranSettings', JSON.stringify(settingsToSave));
-
       await loadPage({ newReciterId: localReciter });
       setIsModified(false);
       toast.success("تم حفظ الإعدادات بنجاح");
@@ -180,7 +163,6 @@ export function SettingsPage({
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
-
         {activeTab === 'audio' && (
             <div className="space-y-4">
             <h3 className="text-lg font-semibold text-main">إعدادات الصوت</h3>
@@ -206,61 +188,6 @@ export function SettingsPage({
                 <option value="medium">متوسط</option>
                 <option value="large">كبير</option>
                 </select>
-
-        {/* Audio Settings */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات الصوت</h3>
-          <div>
-            <label className="block text-sm font-medium text-muted mb-2">القارئ المفضل</label>
-            <div className="flex items-center gap-2">
-              <span className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
-                {reciters && reciters.find(r => r.id === localReciter)?.translated_name.name || "اختر قارئ"}
-              </span>
-              <button 
-                onClick={() => setShowRecitersPanel(true)}
-                className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors font-ui"
-              >
-                تغيير
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Display Settings */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات العرض</h3>
-          <div>
-            <label className="block text-sm font-medium text-muted mb-2">حجم الخط</label>
-            <select value={localFontSize} onChange={(e) => handleFontSizeChange(e.target.value)} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
-              <option value="small">صغير</option>
-              <option value="medium">متوسط</option>
-              <option value="large">كبير</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-muted mb-2">نوع الخط العربي</label>
-            <select value={localArabicFont} onChange={(e) => handleGenericChange(setLocalArabicFont, e.target.value)} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
-              <option value="uthmani">الخط العثماني</option>
-              <option value="indopak">الخط الهندي</option>
-              <option value="qpc">خط مجمع الملك فهد</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-muted mb-2">المظهر</label>
-            <div className="grid grid-cols-4 gap-3 mt-2">
-              <button onClick={() => handleThemeChange('light')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'light' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                <Sun size={24} className="mb-1" /><span className="text-xs">فاتح</span>
-              </button>
-              <button onClick={() => handleThemeChange('dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'dark' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                <Moon size={24} className="mb-1" /><span className="text-xs">داكن</span>
-              </button>
-              <button onClick={() => handleThemeChange('green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'green' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                <Leaf size={24} className="mb-1" /><span className="text-xs">أخضر</span>
-              </button>
-              <button onClick={() => handleThemeChange('sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'sepia' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
-              </button>
-
             </div>
             <div>
                 <label className="block text-sm font-medium text-muted mb-2">نوع الخط العربي</label>
@@ -315,21 +242,12 @@ export function SettingsPage({
 
       {showRecitersPanel && (
         <RecitersList
-
             reciters={reciters}
             selectedReciterId={localReciter}
             onClose={() => setShowRecitersPanel(false)}
             onSelectReciter={(id) => {
                 handleGenericChange(setLocalReciter, id);
             }}
-
-          onClose={() => setShowRecitersPanel(false)}
-          onSelectReciter={(reciterId) => {
-            handleGenericChange(setLocalReciter, reciterId);
-            setShowRecitersPanel(false);
-          }}
-          selectedReciter={localReciter}
-
         />
       )}
     </div>
