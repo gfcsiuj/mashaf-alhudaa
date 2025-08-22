@@ -124,16 +124,14 @@ export function StartKhatmahModal({ onClose, lastPageRead }: StartKhatmahModalPr
                         <span>التالي</span>
                         <ArrowLeft size={18} />
                     </button>
+                ) : isAuthenticated ? (
+                  <button onClick={handleStart} className="px-6 py-2 bg-accent text-white font-bold rounded-lg">
+                    بسم الله، لنبدأ
+                  </button>
                 ) : (
-                    {isAuthenticated ? (
-                      <button onClick={handleStart} className="px-6 py-2 bg-accent text-white font-bold rounded-lg">
-                          بسم الله، لنبدأ
-                      </button>
-                    ) : (
-                      <button className="px-6 py-2 bg-gray-400 text-white font-bold rounded-lg cursor-not-allowed" disabled>
-                          الرجاء تسجيل الدخول أولاً
-                      </button>
-                    )}
+                  <button className="px-6 py-2 bg-gray-400 text-white font-bold rounded-lg cursor-not-allowed" disabled>
+                    الرجاء تسجيل الدخول أولاً
+                  </button>
                 )}
             </div>
         </div>
