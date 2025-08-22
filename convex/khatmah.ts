@@ -9,8 +9,9 @@ export const startKhatmah = mutation({
   args: {
     targetDate: v.optional(v.number()),
     startPage: v.number(),
+    wantsReminder: v.optional(v.boolean()),
   },
-  handler: async (ctx, { targetDate, startPage }) => {
+  handler: async (ctx, { targetDate, startPage, wantsReminder }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("User must be logged in to start a Khatmah.");
@@ -42,6 +43,7 @@ export const startKhatmah = mutation({
       dailyGoalInPages,
       currentPage: startPage,
       status: "active",
+      wantsReminder: wantsReminder ?? false,
     });
 
     return khatmahId;

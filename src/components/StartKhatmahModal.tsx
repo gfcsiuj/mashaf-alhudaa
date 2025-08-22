@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useConvexAuth } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { toast } from 'sonner';
 import { X, Calendar, Book, Play, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -12,10 +12,12 @@ interface StartKhatmahModalProps {
 }
 
 export function StartKhatmahModal({ onClose, lastPageRead }: StartKhatmahModalProps) {
+  const { isAuthenticated } = useConvexAuth();
   const [step, setStep] = useState(1);
   const [duration, setDuration] = useState<number | null>(30);
   const [customDate, setCustomDate] = useState('');
   const [startPage, setStartPage] = useState(1);
+  const [wantsReminder, setWantsReminder] = useState(false);
   const startKhatmah = useMutation(api.khatmah.startKhatmah);
 
   const calculateDailyGoal = () => {
@@ -39,7 +41,7 @@ export function StartKhatmahModal({ onClose, lastPageRead }: StartKhatmahModalPr
     }
     try {
       const targetDate = Date.now() + duration * 24 * 60 * 60 * 1000;
-      await startKhatmah({ targetDate, startPage });
+      await startKhatmah({ targetDate, startPage, wantsReminder });
       toast.success("تم بدء ختمة جديدة بنجاح!");
       onClose();
     } catch (error) {
@@ -78,13 +80,16 @@ export function StartKhatmahModal({ onClose, lastPageRead }: StartKhatmahModalPr
                     <label className="block text-lg font-medium text-main mb-2">من أين ستبدأ؟</label>
                     <div className="flex gap-2">
                         <button onClick={() => setStartPage(1)} className={`flex-1 p-3 rounded-lg ${startPage === 1 ? 'bg-accent text-white' : 'bg-hover'}`}>من الفاتحة</button>
-                        <button onClick={() => setStartPage(lastPageRead)} className={`flex-1 p-3 rounded-lg ${startPage === lastPageRead ? 'bg-accent text-white' : 'bg-hover'}`}>آخر صفحة (ص {lastPageRead})</button>
+                        <button onClick={() => setStartPage(Number(lastPageRead))} className={`flex-1 p-3 rounded-lg ${startPage === Number(lastPageRead) ? 'bg-accent text-white' : 'bg-hover'}`}>آخر صفحة (ص {lastPageRead})</button>
                     </div>
                 </div>
-                <div className="flex items-center justify-between bg-hover p-3 rounded-lg">
-                    <label htmlFor="reminder" className="text-main">ذكرني يومياً بالورد</label>
-                    <div className="w-12 h-6 flex items-center bg-gray-300 rounded-full p-1 duration-300 cursor-pointer">
-                        <div className="bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out"></div>
+                <div
+                  className="flex items-center justify-between bg-hover p-3 rounded-lg cursor-pointer"
+                  onClick={() => setWantsReminder(!wantsReminder)}
+                >
+                    <label className="text-main select-none cursor-pointer">ذكرني يومياً بالورد</label>
+                    <div className={`w-12 h-6 flex items-center rounded-full p-1 duration-300 ${wantsReminder ? 'bg-accent' : 'bg-gray-300'}`}>
+                        <div className={`bg-white w-5 h-5 rounded-full shadow-md transform duration-300 ease-in-out ${wantsReminder ? 'translate-x-5' : ''}`}></div>
                     </div>
                 </div>
             </div>
@@ -120,9 +125,15 @@ export function StartKhatmahModal({ onClose, lastPageRead }: StartKhatmahModalPr
                         <ArrowLeft size={18} />
                     </button>
                 ) : (
-                    <button onClick={handleStart} className="px-6 py-2 bg-accent text-white font-bold rounded-lg">
-                        بسم الله، لنبدأ
-                    </button>
+                    {isAuthenticated ? (
+                      <button onClick={handleStart} className="px-6 py-2 bg-accent text-white font-bold rounded-lg">
+                          بسم الله، لنبدأ
+                      </button>
+                    ) : (
+                      <button className="px-6 py-2 bg-gray-400 text-white font-bold rounded-lg cursor-not-allowed" disabled>
+                          الرجاء تسجيل الدخول أولاً
+                      </button>
+                    )}
                 )}
             </div>
         </div>
