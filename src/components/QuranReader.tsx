@@ -276,12 +276,20 @@ export function QuranReader({ onAskAi }: { onAskAi: (verse: Verse) => void }) {
     };
     appEmitter.on('navigateToJuz', handleNavigateToJuz);
 
+    const handleNavigateToVerse = (data: { pageNumber: number, verseKey: string }) => {
+        if (data && data.pageNumber && data.verseKey) {
+            goToVerse(data.pageNumber, data.verseKey);
+        }
+    };
+    appEmitter.on('navigateToVerse', handleNavigateToVerse);
+
     return () => {
       appEmitter.off('navigateToPage', handleNavigateToPage);
       appEmitter.off('navigateToSurah', handleNavigateToSurah);
       appEmitter.off('changeTheme', handleChangeTheme);
       appEmitter.off('changeFontSize', handleChangeFontSize);
       appEmitter.off('navigateToJuz', handleNavigateToJuz);
+      appEmitter.off('navigateToVerse', handleNavigateToVerse);
     };
   }, [goToPage]);
 

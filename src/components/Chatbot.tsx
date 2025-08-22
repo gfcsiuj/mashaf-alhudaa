@@ -24,6 +24,7 @@ You are "Abdul Hakim," an expert Islamic scholar.
   - To navigate to a page: {"tool": "navigateToPage", "page": 50}
   - To navigate to a surah: {"tool": "navigateToSurah", "surahName": "البقرة"}
   - To navigate to a juz: {"tool": "navigateToJuz", "juz": 25}
+  - To navigate to a specific verse: {"tool": "navigateToVerse", "surahNumber": 2, "verseNumber": 255}
 `;
 
 const BASE_SUGGESTIONS = [
@@ -58,6 +59,48 @@ interface ChatbotProps {
   verse: Verse | null;
 }
 
+// --- Suggestions Component (Moved outside Chatbot to prevent re-rendering) ---
+const Suggestions: React.FC<{ onSuggestionClick: (suggestion: string) => void }> = ({ onSuggestionClick }) => {
+    const [randomSuggestions, setRandomSuggestions] = useState<string[]>([]);
+
+    const generateSuggestions = () => {
+        const shuffled = [...BASE_SUGGESTIONS].sort(() => 0.5 - Math.random());
+
+        const randomSurah = surahData[Math.floor(Math.random() * surahData.length)];
+        const randomJuz = juzData[Math.floor(Math.random() * juzData.length)];
+        const randomPage = Math.floor(Math.random() * 604) + 1;
+
+        const dynamicSuggestions = [
+            `خذني إلى سورة ${randomSurah.arabicName}`,
+            `انتقل إلى الجزء ${randomJuz.id}`,
+            `اذهب إلى صفحة ${randomPage}`
+        ];
+
+        const finalSuggestions = [...shuffled.slice(0, 2), ...dynamicSuggestions.sort(() => 0.5 - Math.random())];
+        setRandomSuggestions(finalSuggestions.slice(0, 4));
+    };
+
+    useEffect(() => {
+        generateSuggestions();
+        const intervalId = setInterval(generateSuggestions, 30000);
+        return () => clearInterval(intervalId);
+    }, []);
+
+    return (
+        <div className="p-3 rounded-lg self-center text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">أو جرب أحد هذه الاقتراحات:</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+                {randomSuggestions.map((suggestion, i) => (
+                    <button key={i} onClick={() => onSuggestionClick(suggestion)} className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-600 rounded-full hover:bg-gray-300 dark:hover:bg-gray-500 transition-all">
+                        {suggestion}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// --- Main Chatbot Component ---
 const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', content: 'بسم الله الرحمن الرحيم. أهلاً بك، أنا عبدالحكيم. كيف يمكنني مساعدتك اليوم؟' }
@@ -84,7 +127,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
     }
   }, [verse, isOpen]);
 
-  const handleToolCall = (tool: string, args: any) => {
+  const handleToolCall = async (tool: string, args: any) => {
     let confirmationMessage = "";
     switch (tool) {
       case 'navigateToPage':
@@ -106,6 +149,22 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
         appEmitter.emit('navigateToJuz', { juz: args.juz });
         confirmationMessage = `**تم بنجاح:** جاري الانتقال إلى **الجزء ${args.juz}**.`;
         onClose();
+        break;
+      case 'navigateToVerse':
+        try {
+            const verseKey = `${args.surahNumber}:${args.verseNumber}`;
+            const verseApiUrl = `https://api.quran.com/api/v4/verses/by_key/${verseKey}`;
+            const verseResponse = await fetch(verseApiUrl);
+            if (!verseResponse.ok) throw new Error("لم يتم العثور على الآية.");
+            const verseData = await verseResponse.json();
+            const pageNumber = verseData.verse.page_number;
+
+            appEmitter.emit('navigateToVerse', { pageNumber, verseKey });
+            confirmationMessage = `**تم بنجاح:** جاري الانتقال إلى الآية **${verseKey}**.`;
+            onClose();
+        } catch (error) {
+            confirmationMessage = `**عذراً:** لم أتمكن من العثور على الآية المطلوبة.`;
+        }
         break;
       default:
         confirmationMessage = `**عذراً:** لا أستطيع تنفيذ هذا الأمر.`;
@@ -164,12 +223,12 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
             const parsedResult = JSON.parse(jsonString);
 
             if (parsedResult.tool) {
-                handleToolCall(parsedResult.tool, parsedResult);
+                await handleToolCall(parsedResult.tool, parsedResult);
             } else {
-                const knownTools = ['navigateToPage', 'navigateToSurah', 'navigateToJuz'];
+                const knownTools = ['navigateToPage', 'navigateToSurah', 'navigateToJuz', 'navigateToVerse'];
                 const foundTool = knownTools.find(t => parsedResult[t]);
                 if(foundTool) {
-                    handleToolCall(foundTool, { [foundTool]: parsedResult[foundTool] });
+                    await handleToolCall(foundTool, { [foundTool]: parsedResult[foundTool] });
                 } else {
                     throw new Error("Parsed JSON is not a recognized tool call.");
                 }
@@ -232,47 +291,6 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
     );
   };
 
-  const Suggestions = () => {
-    const [randomSuggestions, setRandomSuggestions] = useState<string[]>([]);
-
-    const generateSuggestions = () => {
-        const shuffled = [...BASE_SUGGESTIONS].sort(() => 0.5 - Math.random());
-
-        // Add dynamic navigation suggestions
-        const randomSurah = surahData[Math.floor(Math.random() * surahData.length)];
-        const randomJuz = juzData[Math.floor(Math.random() * juzData.length)];
-        const randomPage = Math.floor(Math.random() * 604) + 1;
-
-        const dynamicSuggestions = [
-            `خذني إلى سورة ${randomSurah.arabicName}`,
-            `انتقل إلى الجزء ${randomJuz.id}`,
-            `اذهب إلى صفحة ${randomPage}`
-        ];
-
-        const finalSuggestions = [...shuffled.slice(0, 2), ...dynamicSuggestions.sort(() => 0.5 - Math.random())];
-        setRandomSuggestions(finalSuggestions.slice(0, 4));
-    };
-
-    useEffect(() => {
-        generateSuggestions(); // Initial generation
-        const intervalId = setInterval(generateSuggestions, 30000); // Regenerate every 30 seconds
-        return () => clearInterval(intervalId); // Cleanup on component unmount
-    }, []);
-
-    return (
-        <div className="p-3 rounded-lg self-center text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">أو جرب أحد هذه الاقتراحات:</p>
-            <div className="flex flex-wrap gap-2 justify-center">
-                {randomSuggestions.map((suggestion, i) => (
-                    <button key={i} onClick={() => handleSuggestionClick(suggestion)} className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-600 rounded-full hover:bg-gray-300 dark:hover:bg-gray-500 transition-all">
-                        {suggestion}
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-800 sm:inset-auto sm:bottom-4 sm:right-4 sm:w-full sm:max-w-lg sm:rounded-lg sm:shadow-xl sm:h-auto sm:max-h-[70vh]">
       <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
@@ -312,7 +330,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, verse }) => {
         </div>
       </div>
 
-      {!isLoading && <Suggestions />}
+      {!isLoading && <Suggestions onSuggestionClick={handleSuggestionClick} />}
 
       <form onSubmit={handleFormSubmit} className="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="relative">
