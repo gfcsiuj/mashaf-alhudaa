@@ -1,6 +1,7 @@
-import { query, mutation, action } from "./_generated/server";
+import { query, mutation, action, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { internal } from "./_generated/api";
 
 // Get page data with caching
 export const getPageData = action({
@@ -269,6 +270,7 @@ export const updateUserPreferences = mutation({
   args: {
     selectedReciter: v.optional(v.number()),
     selectedTafsir: v.optional(v.number()),
+    selectedTranslation: v.optional(v.number()),
     theme: v.optional(v.string()),
     fontSize: v.optional(v.string()),
     arabicFont: v.optional(v.string()),
@@ -359,6 +361,12 @@ export const updateReadingProgress = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return;
+
+    // Update Khatmah progress in the background
+    await ctx.runMutation(internal.khatmah.updateKhatmahProgress, {
+        pageNumber: args.pageNumber,
+        userId: userId,
+    });
 
     const existing = await ctx.db
       .query("readingProgress")

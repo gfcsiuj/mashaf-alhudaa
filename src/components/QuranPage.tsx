@@ -3,9 +3,10 @@ import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { AUDIO_BASE_URL } from "./QuranReader";
-import { BookOpen, FileText, Play, Bookmark, Share2, Bot } from "lucide-react";
+import { BookOpen, FileText, Play, Bookmark, Share2, Bot, Image } from "lucide-react";
 import { type Verse } from "../lib/types";
 import { surahData } from "../lib/surah-data";
+import { QuranPageSkeleton } from "./QuranPageSkeleton";
 
 interface QuranPageProps {
   verses: Verse[];
@@ -18,6 +19,8 @@ interface QuranPageProps {
   fontSize: string;
   arabicFont: string;
   onAskAi: (verse: Verse) => void;
+  onShareVerse: (verse: Verse) => void;
+  animationDirection: 'left' | 'right' | 'fade' | null;
 }
 
 function VerseDetail({
@@ -73,7 +76,7 @@ function VerseDetail({
   );
 }
 
-export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer, highlightedVerse, layoutMode, fontSize, arabicFont, onAskAi }: QuranPageProps) {
+export function QuranPage({ verses, isLoading, currentPage, userPreferences, playVerseInMainPlayer, highlightedVerse, layoutMode, fontSize, arabicFont, onAskAi, onShareVerse, animationDirection }: QuranPageProps) {
   const [menuState, setMenuState] = useState<{
     visible: boolean;
     verse: Verse | null;
@@ -151,6 +154,9 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
       case 'ask_ai':
         onAskAi(verse);
         break;
+      case 'share_image':
+        onShareVerse(verse);
+        break;
     }
     handleCloseMenu();
   };
@@ -161,7 +167,7 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-8 h-8 spinner mx-auto"></div></div>;
+    return <QuranPageSkeleton />;
   }
 
   if (!verses || verses.length === 0) {
@@ -175,8 +181,14 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
   const chapterName = getChapterName(firstVerse?.chapter_id);
   const shouldShowBasmala = isChapterStart && firstVerse?.chapter_id !== 9;
 
+  const animationClass = {
+    'left': 'animate-slide-in-from-right',
+    'right': 'animate-slide-in-from-left',
+    'fade': 'animate-fade-in',
+  }[animationDirection || ''] || 'animate-fade-in';
+
   return (
-    <div className="max-w-4xl mx-auto" onClick={handleCloseMenu}>
+    <div key={currentPage} className={`max-w-4xl mx-auto ${animationClass}`} onClick={handleCloseMenu}>
 
       {isChapterStart && (
         <div className="w-full my-8">
@@ -230,7 +242,8 @@ export function QuranPage({ verses, isLoading, currentPage, userPreferences, pla
         >
           <button onClick={() => handleMenuAction('listen')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><Play size={16} /><span>استماع للآية</span></button>
           <button onClick={() => handleMenuAction('bookmark')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><Bookmark size={16} /><span>إضافة للمفضلة</span></button>
-          <button onClick={() => handleMenuAction('share')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><Share2 size={16} /><span>مشاركة الآية</span></button>
+          <button onClick={() => handleMenuAction('share')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><Share2 size={16} /><span>مشاركة كنص</span></button>
+          <button onClick={() => handleMenuAction('share_image')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><Image size={16} /><span>مشاركة كصورة</span></button>
           <button onClick={() => handleMenuAction('tafsir')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><BookOpen size={16} /><span>عرض التفسير</span></button>
           <button onClick={() => handleMenuAction('translation')} className="w-full px-4 py-2 text-right bg-hover flex items-center gap-3 transition-colors text-main"><FileText size={16} /><span>عرض الترجمة</span></button>
           <div className="border-t border-main my-1"></div>
