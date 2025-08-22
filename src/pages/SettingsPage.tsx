@@ -3,6 +3,7 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Moon, Save, X, Leaf, BookOpen, Sun } from "lucide-react";
+import { RecitersList } from "../components/RecitersList"; // <-- استيراد المكون الجديد
 
 interface SettingsPageProps {
   onClose: () => void;
@@ -44,6 +45,8 @@ export function SettingsPage({
   const [localFontSize, setLocalFontSize] = useState(fontSize);
   const [localTheme, setLocalTheme] = useState(currentTheme);
   const [localArabicFont, setLocalArabicFont] = useState(arabicFont);
+  
+  const [showRecitersPanel, setShowRecitersPanel] = useState(false); // <-- حالة جديدة لإظهار/إخفاء لوحة القراء
 
   const getReciters = useAction(api.quran.getReciters);
   const getTafsirs = useAction(api.quran.getTafsirs);
@@ -136,11 +139,17 @@ export function SettingsPage({
           <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات الصوت</h3>
           <div>
             <label className="block text-sm font-medium text-muted mb-2">القارئ المفضل</label>
-            <select value={localReciter} onChange={(e) => handleGenericChange(setLocalReciter, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
-              {reciters === null ? <option>جار التحميل...</option> :
-               reciters.length > 0 ? reciters.map((r) => (<option key={r.id} value={r.id}>{r.translated_name.name}</option>)) :
-               <option>تعذر تحميل القراء</option>}
-            </select>
+            <div className="flex items-center gap-2">
+              <span className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
+                {reciters && reciters.find(r => r.id === localReciter)?.translated_name.name || "اختر قارئ"}
+              </span>
+              <button 
+                onClick={() => setShowRecitersPanel(true)}
+                className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors font-ui"
+              >
+                تغيير
+              </button>
+            </div>
           </div>
         </div>
 
@@ -167,16 +176,16 @@ export function SettingsPage({
             <label className="block text-sm font-medium text-muted mb-2">المظهر</label>
             <div className="grid grid-cols-4 gap-3 mt-2">
               <button onClick={() => handleGenericChange(setCurrentTheme, 'light')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'light' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                  <Sun size={24} className="mb-1" /><span className="text-xs">فاتح</span>
+                <Sun size={24} className="mb-1" /><span className="text-xs">فاتح</span>
               </button>
               <button onClick={() => handleGenericChange(setCurrentTheme, 'dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'dark' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                  <Moon size={24} className="mb-1" /><span className="text-xs">داكن</span>
+                <Moon size={24} className="mb-1" /><span className="text-xs">داكن</span>
               </button>
               <button onClick={() => handleGenericChange(setCurrentTheme, 'green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'green' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                  <Leaf size={24} className="mb-1" /><span className="text-xs">أخضر</span>
+                <Leaf size={24} className="mb-1" /><span className="text-xs">أخضر</span>
               </button>
               <button onClick={() => handleGenericChange(setCurrentTheme, 'sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'sepia' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                  <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
+                <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
               </button>
             </div>
           </div>
@@ -203,6 +212,17 @@ export function SettingsPage({
           </div>
         </div>
       </div>
+
+      {showRecitersPanel && (
+        <RecitersList
+          onClose={() => setShowRecitersPanel(false)}
+          onSelectReciter={(reciterId) => {
+            handleGenericChange(setLocalReciter, reciterId);
+            setShowRecitersPanel(false);
+          }}
+          selectedReciter={localReciter}
+        />
+      )}
     </div>
   );
 }
