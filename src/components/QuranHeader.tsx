@@ -39,23 +39,31 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, la
           <div className="flex items-center justify-between">
           {/* Left: App Title with Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-main shadow-sm border border-main flex items-center justify-center">
-              <img 
-                src={logoUrl} 
-                alt="مصحف الهادي" 
-                className="w-16 h-16 object-contain -m-2"
-                onError={(e) => {
-                  // Fallback to default icon if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <svg className="w-6 h-6 text-accent hidden" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
-              </svg>
-            </div>
-            <div>
+  {/* سنجعل هذه الحاوية فقط للتوسيط */}
+  <div className="w-12 h-12 flex items-center justify-center">
+    <img 
+      src={logoUrl} 
+      alt="مصحف الهادي" 
+      // نطبق كل التنسيقات على الصورة مباشرة
+      className="w-16 h-16 object-cover rounded-lg shadow-sm border border-main"
+      onError={(e) => {
+        // Fallback to default icon if image fails to load
+        const target = e.target as HTMLImageElement;
+        target.style.display = 'none';
+        target.nextElementSibling?.classList.remove('hidden');
+      }}
+    />
+    <svg className="w-6 h-6 text-accent hidden" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+    </svg>
+  </div>
+  <div>
+    <h1 className="text-lg font-semibold text-main font-ui">
+      مصحف الهادي
+    </h1>
+    <p className="text-xs text-muted font-ui">القرآن الكريم</p>
+  </div>
+</div>
               <h1 className="text-lg font-semibold text-main font-ui">
                 مصحف الهادي
               </h1>
