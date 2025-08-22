@@ -7,14 +7,12 @@ import { Moon, Save, X, Leaf, BookOpen, Sun } from "lucide-react";
 interface SettingsPageProps {
   onClose: () => void;
   loadPage: () => void;
-  // State values from parent
   selectedReciter: number;
   selectedTafsir: number;
   selectedTranslation: number;
   fontSize: string;
   currentTheme: string;
   arabicFont: string;
-  // State setters from parent
   setSelectedReciter: (id: number) => void;
   setSelectedTafsir: (id: number) => void;
   setSelectedTranslation: (id: number) => void;
@@ -39,7 +37,6 @@ export function SettingsPage({
   setCurrentTheme,
   setArabicFont,
 }: SettingsPageProps) {
-  // Local state for pending changes
   const [isModified, setIsModified] = useState(false);
   const [localReciter, setLocalReciter] = useState(selectedReciter);
   const [localTafsir, setLocalTafsir] = useState(selectedTafsir);
@@ -48,50 +45,33 @@ export function SettingsPage({
   const [localTheme, setLocalTheme] = useState(currentTheme);
   const [localArabicFont, setLocalArabicFont] = useState(arabicFont);
 
-  // Data fetching
   const getReciters = useAction(api.quran.getReciters);
-  const getTafsirs = useAction(api.quran.getTafsirs);
-  const getTranslations = useAction(api.quran.getTranslations);
-  const [reciters, setReciters] = useState<any[]>([]);
-  const [tafsirs, setTafsirs] = useState<any[]>([]);
-  const [translations, setTranslations] = useState<any[]>([]);
-
-  const userPreferences = useQuery(api.quran.getUserPreferences);
-  const updatePreferences = useMutation(api.quran.updateUserPreferences);
+  const [reciters, setReciters] = useState<any[] | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [recitersData, tafsirsData, translationsData] = await Promise.all([
-          getReciters({}),
-          getTafsirs({}),
-          getTranslations({}),
-        ]);
-        setReciters(recitersData);
-        setTafsirs(tafsirsData);
-        setTranslations(translationsData);
-      } catch (error) {
-        toast.error("خطأ في تحميل بيانات الإعدادات");
-        console.error("Failed to fetch settings data:", error);
-      }
-    };
-    fetchData();
-  }, [getReciters, getTafsirs, getTranslations]);
+    getReciters({}).then(data => {
+      setReciters(data || []);
+    }).catch(error => {
+      console.error("Failed to fetch reciters:", error);
+      toast.error("خطأ في تحميل قائمة القراء");
+      setReciters([]);
+    });
+  }, [getReciters]);
 
-  const handleSettingChange = <T,>(setter: (value: T) => void, value: T) => {
+  const handleFontSizeChange = (newSize: string) => {
+    setLocalFontSize(newSize);
+    setFontSize(newSize); // Apply instantly
+    setIsModified(true);
+  };
+
+  const handleGenericChange = <T,>(setter: (value: T) => void, value: T) => {
     setter(value);
     setIsModified(true);
   };
 
   const saveAllSettings = async () => {
-    // Apply changes to parent state
-    setSelectedReciter(localReciter);
-    setSelectedTafsir(localTafsir);
-    setSelectedTranslation(localTranslation);
-    setFontSize(localFontSize);
-    setCurrentTheme(localTheme);
-    setArabicFont(localArabicFont);
-
+    // Other settings are already updated via local state setters
+    // We just need to persist them
     const settingsToSave = {
       selectedReciter: localReciter,
       selectedTafsir: localTafsir,
@@ -101,19 +81,11 @@ export function SettingsPage({
       arabicFont: localArabicFont,
     };
 
-    try {
-      if (userPreferences) {
-        await updatePreferences(settingsToSave);
-      }
-      localStorage.setItem('quranSettings', JSON.stringify(settingsToSave));
-      await loadPage(); // Reload page data with new settings
-      setIsModified(false);
-      toast.success("تم حفظ الإعدادات بنجاح");
-      onClose();
-    } catch (error) {
-      toast.error("خطأ في حفظ الإعدادات");
-      console.error("Error updating preferences:", error);
-    }
+    localStorage.setItem('quranSettings', JSON.stringify(settingsToSave));
+    toast.success("تم حفظ الإعدادات بنجاح");
+    setIsModified(false);
+    // No need to call loadPage unless reciter/tafsir/translation changes
+    // onClose(); // Maybe keep the modal open
   };
 
   return (
@@ -130,23 +102,23 @@ export function SettingsPage({
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        {/* Audio Settings */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات الصوت</h3>
           <div>
             <label className="block text-sm font-medium text-muted mb-2">القارئ المفضل</label>
-            <select value={localReciter} onChange={(e) => handleSettingChange(setLocalReciter, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
-              {reciters.length > 0 ? reciters.map((r) => (<option key={r.id} value={r.id}>{r.name}</option>)) : <option>جار التحميل...</option>}
+            <select value={localReciter} onChange={(e) => handleGenericChange(setLocalReciter, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
+              {reciters === null && <option>جار التحميل...</option>}
+              {reciters && reciters.length > 0 && reciters.map((r: any) => (<option key={r.id} value={r.id}>{r.name}</option>))}
+              {reciters && reciters.length === 0 && <option>تعذر تحميل القراء</option>}
             </select>
           </div>
         </div>
 
-        {/* Display Settings */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات العرض</h3>
           <div>
             <label className="block text-sm font-medium text-muted mb-2">حجم الخط</label>
-            <select value={localFontSize} onChange={(e) => handleSettingChange(setLocalFontSize, e.target.value)} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
+            <select value={localFontSize} onChange={(e) => handleFontSizeChange(e.target.value)} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
               <option value="small">صغير</option>
               <option value="medium">متوسط</option>
               <option value="large">كبير</option>
@@ -154,7 +126,7 @@ export function SettingsPage({
           </div>
           <div>
             <label className="block text-sm font-medium text-muted mb-2">نوع الخط العربي</label>
-            <select value={localArabicFont} onChange={(e) => handleSettingChange(setLocalArabicFont, e.target.value)} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
+            <select value={localArabicFont} onChange={(e) => handleGenericChange(setLocalArabicFont, e.target.value)} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
               <option value="uthmani">الخط العثماني</option>
               <option value="indopak">الخط الهندي</option>
               <option value="qpc">خط مجمع الملك فهد</option>
@@ -163,36 +135,19 @@ export function SettingsPage({
           <div>
             <label className="block text-sm font-medium text-muted mb-2">المظهر</label>
             <div className="grid grid-cols-4 gap-3 mt-2">
-              <button onClick={() => handleSettingChange(setLocalTheme, 'light')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'light' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                <Sun size={24} className="mb-1" /><span className="text-xs">فاتح</span>
+              <button onClick={() => handleGenericChange(setCurrentTheme, 'light')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'light' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+                  <Sun size={24} className="mb-1" /><span className="text-xs">فاتح</span>
               </button>
-              <button onClick={() => handleSettingChange(setLocalTheme, 'dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'dark' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                <Moon size={24} className="mb-1" /><span className="text-xs">داكن</span>
+              <button onClick={() => handleGenericChange(setCurrentTheme, 'dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'dark' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+                  <Moon size={24} className="mb-1" /><span className="text-xs">داكن</span>
               </button>
-              <button onClick={() => handleSettingChange(setLocalTheme, 'green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'green' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                <Leaf size={24} className="mb-1" /><span className="text-xs">أخضر</span>
+              <button onClick={() => handleGenericChange(setCurrentTheme, 'green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'green' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+                  <Leaf size={24} className="mb-1" /><span className="text-xs">أخضر</span>
               </button>
-              <button onClick={() => handleSettingChange(setLocalTheme, 'sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'sepia' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
-                <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
+              <button onClick={() => handleGenericChange(setCurrentTheme, 'sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'sepia' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+                  <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* Content Settings */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات المحتوى</h3>
-          <div>
-            <label className="block text-sm font-medium text-muted mb-2">التفسير المفضل</label>
-            <select value={localTafsir} onChange={(e) => handleSettingChange(setLocalTafsir, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
-              {tafsirs.length > 0 ? tafsirs.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>)) : <option>جار التحميل...</option>}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-muted mb-2">الترجمة المفضلة</label>
-            <select value={localTranslation} onChange={(e) => handleSettingChange(setLocalTranslation, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
-              {translations.length > 0 ? translations.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>)) : <option>جار التحميل...</option>}
-            </select>
           </div>
         </div>
       </div>
