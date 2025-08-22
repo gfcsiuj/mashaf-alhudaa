@@ -31,8 +31,6 @@ export function KhatmahPanel({ onClose }: KhatmahPanelProps) {
     }
   };
 
-  const progress = activeKhatmah ? (activeKhatmah.completedPages.length / 604) * 100 : 0;
-
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-main rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
@@ -79,37 +77,38 @@ export function KhatmahPanel({ onClose }: KhatmahPanelProps) {
              </form>
           )}
 
-          {activeKhatmah && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-2xl font-bold text-accent">{activeKhatmah.name}</h3>
-                <p className="text-sm text-muted">بدأت في: {new Date(activeKhatmah.startDate).toLocaleDateString('ar-EG')}</p>
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium text-main">التقدم</span>
-                  <span className="text-sm font-medium text-accent">{Math.round(progress)}%</span>
+          {activeKhatmah && (() => {
+            const progress = (activeKhatmah.completedPages.length / 604) * 100;
+            return (
+                <div className="space-y-6">
+                <div>
+                    <h3 className="text-2xl font-bold text-accent">{activeKhatmah.name}</h3>
+                    <p className="text-sm text-muted">بدأت في: {new Date(activeKhatmah.startDate).toLocaleDateString('ar-EG')}</p>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
-                  <div
-                    className="bg-accent h-4 rounded-full transition-all duration-500"
-                    style={{ width: `${progress}%` }}
-                  ></div>
+                <div>
+                    <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium text-main">التقدم</span>
+                    <span className="text-sm font-medium text-accent">{Math.round(progress)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                    <div
+                        className="bg-accent h-4 rounded-full transition-all duration-500"
+                        style={{ width: `${progress}%` }}
+                    ></div>
+                    </div>
+                    <p className="text-xs text-muted mt-1 text-center">{activeKhatmah.completedPages.length} / 604 صفحة</p>
                 </div>
-                <p className="text-xs text-muted mt-1 text-center">{activeKhatmah.completedPages.length} / 604 صفحة</p>
-              </div>
 
-              {/* Future: Add Juz grid visualization here */}
-
-              <button
-                onClick={() => setShowNewKhatmahForm(true)}
-                className="w-full mt-4 px-4 py-2 border border-accent text-accent rounded-lg hover:bg-accent/10 transition-colors font-ui flex items-center gap-2 mx-auto justify-center"
-              >
-                <Play size={18} />
-                <span>بدء ختمة جديدة (ستتوقف الحالية)</span>
-              </button>
-            </div>
-          )}
+                <button
+                    onClick={() => setShowNewKhatmahForm(true)}
+                    className="w-full mt-4 px-4 py-2 border border-accent text-accent rounded-lg hover:bg-accent/10 transition-colors font-ui flex items-center gap-2 mx-auto justify-center"
+                >
+                    <Play size={18} />
+                    <span>بدء ختمة جديدة (ستتوقف الحالية)</span>
+                </button>
+                </div>
+            );
+          })()}
         </div>
       </div>
     </div>

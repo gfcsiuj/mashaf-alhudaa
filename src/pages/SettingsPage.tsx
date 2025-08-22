@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
-import { Moon, Save, X, Leaf, BookOpen, Sun, AudioLines, SlidersHorizontal, FileText } from "lucide-react";
+import { Moon, Save, X, Leaf, BookOpen, Sun, AudioLines, SlidersHorizontal, FileText, ChevronLeft } from "lucide-react";
+import { RecitersList } from "../components/RecitersList";
 
 interface SettingsPageProps {
   onClose: () => void;
@@ -41,6 +42,7 @@ export function SettingsPage({
 }: SettingsPageProps) {
   const [isModified, setIsModified] = useState(false);
   const [activeTab, setActiveTab] = useState('display');
+  const [showRecitersPanel, setShowRecitersPanel] = useState(false);
 
   const [localReciter, setLocalReciter] = useState(selectedReciter);
   const [localTafsir, setLocalTafsir] = useState(selectedTafsir);
@@ -166,11 +168,12 @@ export function SettingsPage({
             <h3 className="text-lg font-semibold text-main">إعدادات الصوت</h3>
             <div>
                 <label className="block text-sm font-medium text-muted mb-2">القارئ المفضل</label>
-                <select value={localReciter} onChange={(e) => handleGenericChange(setLocalReciter, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
-                {reciters === null ? <option>جار التحميل...</option> :
-                reciters.length > 0 ? reciters.map((r) => (<option key={r.id} value={r.id}>{r.name}</option>)) :
-                <option>تعذر تحميل القراء</option>}
-                </select>
+                <button onClick={() => setShowRecitersPanel(true)} className="w-full flex justify-between items-center px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
+                    <span>
+                        {reciters?.find(r => r.id === localReciter)?.translated_name?.name || 'اختر قارئ'}
+                    </span>
+                    <ChevronLeft size={20} className="text-muted" />
+                </button>
             </div>
             </div>
         )}
@@ -236,6 +239,17 @@ export function SettingsPage({
             </div>
         )}
       </div>
+
+      {showRecitersPanel && (
+        <RecitersList
+            reciters={reciters}
+            selectedReciterId={localReciter}
+            onClose={() => setShowRecitersPanel(false)}
+            onSelectReciter={(id) => {
+                handleGenericChange(setLocalReciter, id);
+            }}
+        />
+      )}
     </div>
   );
 }
