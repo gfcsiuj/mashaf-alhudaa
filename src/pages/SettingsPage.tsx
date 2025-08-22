@@ -46,17 +46,35 @@ export function SettingsPage({
   const [localArabicFont, setLocalArabicFont] = useState(arabicFont);
 
   const getReciters = useAction(api.quran.getReciters);
+  const getTafsirs = useAction(api.quran.getTafsirs);
+  const getTranslations = useAction(api.quran.getTranslations);
   const [reciters, setReciters] = useState<any[] | null>(null);
+  const [tafsirs, setTafsirs] = useState<any[] | null>(null);
+  const [translations, setTranslations] = useState<any[] | null>(null);
+
+  const updatePreferences = useMutation(api.quran.updateUserPreferences);
 
   useEffect(() => {
-    getReciters({}).then(data => {
-      setReciters(data || []);
-    }).catch(error => {
-      console.error("Failed to fetch reciters:", error);
-      toast.error("خطأ في تحميل قائمة القراء");
-      setReciters([]);
-    });
-  }, [getReciters]);
+    const fetchData = async () => {
+      try {
+        const [recitersData, tafsirsData, translationsData] = await Promise.all([
+          getReciters({}),
+          getTafsirs({}),
+          getTranslations({}),
+        ]);
+        setReciters(recitersData || []);
+        setTafsirs(tafsirsData || []);
+        setTranslations(translationsData || []);
+      } catch (error) {
+        toast.error("خطأ في تحميل بيانات الإعدادات");
+        console.error("Failed to fetch settings data:", error);
+        setReciters([]);
+        setTafsirs([]);
+        setTranslations([]);
+      }
+    };
+    fetchData();
+  }, [getReciters, getTafsirs, getTranslations]);
 
   const handleFontSizeChange = (newSize: string) => {
     setLocalFontSize(newSize);
@@ -70,8 +88,13 @@ export function SettingsPage({
   };
 
   const saveAllSettings = async () => {
-    // Other settings are already updated via local state setters
-    // We just need to persist them
+    setSelectedReciter(localReciter);
+    setSelectedTafsir(localTafsir);
+    setSelectedTranslation(localTranslation);
+    setFontSize(localFontSize);
+    setCurrentTheme(localTheme);
+    setArabicFont(localArabicFont);
+
     const settingsToSave = {
       selectedReciter: localReciter,
       selectedTafsir: localTafsir,
@@ -81,11 +104,17 @@ export function SettingsPage({
       arabicFont: localArabicFont,
     };
 
-    localStorage.setItem('quranSettings', JSON.stringify(settingsToSave));
-    toast.success("تم حفظ الإعدادات بنجاح");
-    setIsModified(false);
-    // No need to call loadPage unless reciter/tafsir/translation changes
-    // onClose(); // Maybe keep the modal open
+    try {
+      await updatePreferences(settingsToSave);
+      localStorage.setItem('quranSettings', JSON.stringify(settingsToSave));
+      await loadPage();
+      setIsModified(false);
+      toast.success("تم حفظ الإعدادات بنجاح");
+      onClose();
+    } catch (error) {
+      toast.error("خطأ في حفظ الإعدادات");
+      console.error("Error updating preferences:", error);
+    }
   };
 
   return (
@@ -102,18 +131,20 @@ export function SettingsPage({
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
+        {/* Audio Settings */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات الصوت</h3>
           <div>
             <label className="block text-sm font-medium text-muted mb-2">القارئ المفضل</label>
             <select value={localReciter} onChange={(e) => handleGenericChange(setLocalReciter, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
-              {reciters === null && <option>جار التحميل...</option>}
-              {reciters && reciters.length > 0 && reciters.map((r: any) => (<option key={r.id} value={r.id}>{r.name}</option>))}
-              {reciters && reciters.length === 0 && <option>تعذر تحميل القراء</option>}
+              {reciters === null ? <option>جار التحميل...</option> :
+               reciters.length > 0 ? reciters.map((r) => (<option key={r.id} value={r.id}>{r.name}</option>)) :
+               <option>تعذر تحميل القراء</option>}
             </select>
           </div>
         </div>
 
+        {/* Display Settings */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات العرض</h3>
           <div>
@@ -148,6 +179,27 @@ export function SettingsPage({
                   <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Content Settings */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-main border-b border-main pb-2">إعدادات المحتوى</h3>
+          <div>
+            <label className="block text-sm font-medium text-muted mb-2">التفسير المفضل</label>
+            <select value={localTafsir} onChange={(e) => handleGenericChange(setLocalTafsir, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
+              {tafsirs === null ? <option>جار التحميل...</option> :
+               tafsirs.length > 0 ? tafsirs.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>)) :
+               <option>تعذر تحميل التفاسير</option>}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-muted mb-2">الترجمة المفضلة</label>
+            <select value={localTranslation} onChange={(e) => handleGenericChange(setLocalTranslation, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
+              {translations === null ? <option>جار التحميل...</option> :
+               translations.length > 0 ? translations.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>)) :
+               <option>تعذر تحميل الترجمات</option>}
+            </select>
           </div>
         </div>
       </div>
