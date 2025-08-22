@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useAction } from "convex/react";
+import { useConvexAuth, useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Moon, Save, X, Leaf, BookOpen, Sun } from "lucide-react";
@@ -38,6 +38,7 @@ export function SettingsPage({
   setCurrentTheme,
   setArabicFont,
 }: SettingsPageProps) {
+  const { isAuthenticated } = useConvexAuth();
   const [isModified, setIsModified] = useState(false);
   const [localReciter, setLocalReciter] = useState(selectedReciter);
   const [localTafsir, setLocalTafsir] = useState(selectedTafsir);
@@ -90,6 +91,12 @@ export function SettingsPage({
     setIsModified(true);
   };
 
+  const handleThemeChange = (theme: string) => {
+    setLocalTheme(theme);
+    setCurrentTheme(theme); // Apply theme instantly
+    setIsModified(true);
+  };
+
   const saveAllSettings = async () => {
     setSelectedReciter(localReciter);
     setSelectedTafsir(localTafsir);
@@ -108,9 +115,10 @@ export function SettingsPage({
     };
 
     try {
-      await updatePreferences(settingsToSave);
+      if (isAuthenticated) {
+        await updatePreferences(settingsToSave);
+      }
       localStorage.setItem('quranSettings', JSON.stringify(settingsToSave));
-      await loadPage();
       setIsModified(false);
       toast.success("تم حفظ الإعدادات بنجاح");
       onClose();
@@ -175,16 +183,16 @@ export function SettingsPage({
           <div>
             <label className="block text-sm font-medium text-muted mb-2">المظهر</label>
             <div className="grid grid-cols-4 gap-3 mt-2">
-              <button onClick={() => handleGenericChange(setCurrentTheme, 'light')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'light' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+              <button onClick={() => handleThemeChange('light')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'light' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <Sun size={24} className="mb-1" /><span className="text-xs">فاتح</span>
               </button>
-              <button onClick={() => handleGenericChange(setCurrentTheme, 'dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'dark' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+              <button onClick={() => handleThemeChange('dark')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'dark' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <Moon size={24} className="mb-1" /><span className="text-xs">داكن</span>
               </button>
-              <button onClick={() => handleGenericChange(setCurrentTheme, 'green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'green' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+              <button onClick={() => handleThemeChange('green')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'green' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <Leaf size={24} className="mb-1" /><span className="text-xs">أخضر</span>
               </button>
-              <button onClick={() => handleGenericChange(setCurrentTheme, 'sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'sepia' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
+              <button onClick={() => handleThemeChange('sepia')} className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${localTheme === 'sepia' ? 'bg-accent text-white ring-2 ring-accent' : 'bg-hover'}`}>
                 <BookOpen size={24} className="mb-1" /><span className="text-xs">بني فاتح</span>
               </button>
             </div>
