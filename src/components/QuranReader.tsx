@@ -150,6 +150,8 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
     root.classList.add(`theme-${currentTheme}`);
   }, [currentTheme]);
   
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
     const initializeApp = async () => {
       const savedPage = localStorage.getItem('quranLastPage');
@@ -160,10 +162,14 @@ export function QuranReader({ onAskAi, showControls, onPageClick }: QuranReaderP
   }, []);
 
   useEffect(() => {
-    if (userPreferences && currentPage > 0 && pageData) {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (currentPage > 0) {
       loadPage(currentPage, { shouldStartPlaying: false });
     }
-  }, [userPreferences?.selectedReciter, userPreferences?.selectedTafsir]);
+  }, [selectedReciter, selectedTafsir, selectedTranslation]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
