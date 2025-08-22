@@ -138,7 +138,7 @@ export function SettingsPage({
             <label className="block text-sm font-medium text-muted mb-2">القارئ المفضل</label>
             <select value={localReciter} onChange={(e) => handleGenericChange(setLocalReciter, parseInt(e.target.value))} className="w-full px-3 py-2 bg-main border-main border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none">
               {reciters === null ? <option>جار التحميل...</option> :
-               reciters.length > 0 ? reciters.map((r) => (<option key={r.id} value={r.id}>{r.name}</option>)) :
+               reciters.length > 0 ? reciters.map((r) => (<option key={r.id} value={r.id}>{r.reciter_name}</option>)) :
                <option>تعذر تحميل القراء</option>}
             </select>
           </div>
