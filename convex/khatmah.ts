@@ -23,11 +23,11 @@ export const startKhatmah = mutation({
       .collect();
 
     for (const active of existingActive) {
-      await ctx.db.patch(active._id, { status: "completed" }); // Mark old ones as completed
+      await ctx.db.patch(active._id, { status: "completed" });
     }
 
     // Calculate daily goal
-    let dailyGoalInPages = 20; // Default goal
+    let dailyGoalInPages = 20; // Default goal if no target date
     if (targetDate) {
         const daysToTarget = (targetDate - Date.now()) / (1000 * 60 * 60 * 24);
         if (daysToTarget > 0) {
@@ -83,19 +83,7 @@ export const getCompletedKhatmahs = query({
     },
 });
 
-// Get daily progress for a specific Khatmah
-export const getDailyProgress = query({
-    args: { khatmahId: v.id("khatmahs") },
-    handler: async (ctx, { khatmahId }) => {
-        return await ctx.db
-            .query("daily_progress")
-            .withIndex("by_khatmah_and_date", q => q.eq("khatmahId", khatmahId))
-            .order("desc")
-            .take(30); // Get last 30 days of reading
-    },
-});
-
-// Internal mutation to update progress, called from other mutations
+// Internal mutation to update progress
 export const updateKhatmahProgress = internalMutation({
     args: { pageNumber: v.number(), userId: v.id("users") },
     handler: async (ctx, { pageNumber, userId }) => {
@@ -105,33 +93,12 @@ export const updateKhatmahProgress = internalMutation({
             .first();
 
         if (activeKhatmah) {
-            const pagesReadInSession = pageNumber - activeKhatmah.currentPage;
-
             // Only update if the user is moving forward
-            if (pagesReadInSession > 0) {
-                // Update total progress
+            if (pageNumber > activeKhatmah.currentPage) {
                 await ctx.db.patch(activeKhatmah._id, {
                     currentPage: pageNumber,
                 });
-
-                // Update daily progress log
-                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-                const dailyRecord = await ctx.db
-                    .query("daily_progress")
-                    .withIndex("by_khatmah_and_date", q => q.eq("khatmahId", activeKhatmah._id).eq("date", today))
-                    .first();
-
-                if (dailyRecord) {
-                    await ctx.db.patch(dailyRecord._id, { pagesRead: dailyRecord.pagesRead + pagesReadInSession });
-                } else {
-                    await ctx.db.insert("daily_progress", {
-                        khatmahId: activeKhatmah._id,
-                        date: today,
-                        pagesRead: pagesReadInSession,
-                    });
-                }
             }
-
             // Check for completion
             if (pageNumber >= QURAN_TOTAL_PAGES) {
                 await ctx.db.patch(activeKhatmah._id, {
