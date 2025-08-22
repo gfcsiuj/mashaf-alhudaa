@@ -71,12 +71,6 @@ const applicationTables = {
     currentPage: v.number(),
     status: v.string(), // "active" | "completed"
   }).index("by_user_status", ["userId", "status"]),
-
-  daily_progress: defineTable({
-    khatmahId: v.id("khatmahs"),
-    date: v.string(), // "YYYY-MM-DD"
-    pagesRead: v.number(),
-  }).index("by_khatmah_and_date", ["khatmahId", "date"]),
 };
 
 export default defineSchema({
