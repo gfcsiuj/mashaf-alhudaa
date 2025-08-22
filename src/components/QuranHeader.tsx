@@ -39,11 +39,11 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, la
           <div className="flex items-center justify-between">
           {/* Left: App Title with Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-main shadow-sm border border-main flex items-center justify-center">
+            <div className="w-12 h-12 rounded-lg bg-main shadow-sm border border-main flex items-center justify-center">
               <img 
                 src={logoUrl} 
                 alt="مصحف الهادي" 
-                className="w-18 h-18 object-contain"
+                className="w-16 h-16 object-contain -m-2"
                 onError={(e) => {
                   // Fallback to default icon if image fails to load
                   const target = e.target as HTMLImageElement;
