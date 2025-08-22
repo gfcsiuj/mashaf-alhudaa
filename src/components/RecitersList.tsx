@@ -20,10 +20,12 @@ interface RecitersListProps {
 export function RecitersList({ reciters, selectedReciterId, onClose, onSelectReciter }: RecitersListProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredReciters = reciters?.filter(reciter =>
-    reciter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reciter.translated_name?.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredReciters = reciters?.filter(reciter => {
+    const term = searchTerm.toLowerCase();
+    const name = (reciter.name || '').toLowerCase();
+    const translatedName = (reciter.translated_name?.name || '').toLowerCase();
+    return name.includes(term) || translatedName.includes(term);
+  });
 
   const handleSelect = (id: number) => {
     onSelectReciter(id);

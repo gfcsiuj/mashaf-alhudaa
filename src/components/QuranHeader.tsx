@@ -43,7 +43,7 @@ export function QuranHeader({ currentPage, verses, showControls, onOpenPanel, la
               <img 
                 src={logoUrl} 
                 alt="مصحف الهادي" 
-                className="w-16 h-16 object-cover rounded-lg shadow-sm border border-main bg-main"
+                className="w-14 h-14 object-cover rounded-lg shadow-sm border border-main bg-main"
                 onError={(e) => {
                   // Fallback to default icon if image fails to load
                   const target = e.target as HTMLImageElement;

@@ -63,7 +63,7 @@ import { internalMutation } from "./_generated/server";
 
 // Internal mutation to update progress, called from other mutations
 export const updateKhatmahProgress = internalMutation({
-    args: { pageNumber: v.number(), userId: v.string() },
+    args: { pageNumber: v.number(), userId: v.id("users") },
     handler: async (ctx, { pageNumber, userId }) => {
         const activeKhatmah = await ctx.db
             .query("khatmahs")

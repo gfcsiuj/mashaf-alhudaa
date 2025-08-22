@@ -270,6 +270,7 @@ export const updateUserPreferences = mutation({
   args: {
     selectedReciter: v.optional(v.number()),
     selectedTafsir: v.optional(v.number()),
+    selectedTranslation: v.optional(v.number()),
     theme: v.optional(v.string()),
     fontSize: v.optional(v.string()),
     arabicFont: v.optional(v.string()),
